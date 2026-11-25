@@ -23,7 +23,12 @@ A JSON array. **Append only**: never delete, reorder or edit existing entries, n
   "tags": ["music", "pov"],
   "promo_idea": "How Dominik could use this format to promote his music",
   "why_picked": "Which of his past swipes this is based on",
-  "explore": false
+  "explore": false,
+  "caption": "Full post description text",
+  "hashtags": ["karaoke", "carkaraoke"],
+  "sound": { "title": "original sound - creator", "author": "Display name", "is_original": true },
+  "creator_bio": "The creator's TikTok bio/signature",
+  "creator_nickname": "Display name"
 }
 ```
 
@@ -36,6 +41,7 @@ A JSON array. **Append only**: never delete, reorder or edit existing entries, n
 | `hook`, `format`, `promo_idea` | yes | Shown on the card |
 | `why_picked` | recommended | Shown on the card, lets Dominik see your reasoning |
 | `explore` | optional | `true` for deliberate experiments outside his proven taste. Aim for ~20% of each batch |
+| `caption`, `hashtags`, `sound`, `creator_bio`, `creator_nickname` | recommended | Include on every new video. `hashtags` are names without `#`, from `text_extra` / `cha_list` or parsed from the caption. `sound` is `{title, author, is_original}` (`is_original` = TikTok's original-sound flag). Use `null` when a value is missing; never invent. |
 | everything else | optional | |
 
 How to write (GitHub contents API):

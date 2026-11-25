@@ -68,6 +68,13 @@
   .idea { margin-top: 8px; padding: 10px 12px; background: var(--panel2); border-radius: 12px; font-size: 14px; }
   .idea .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--accent); display: block; margin-bottom: 3px; }
   .why { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .bio { font-size: 12px; color: var(--muted); margin: 4px 0 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .caption { font-size: 13px; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .caption.collapsible { cursor: pointer; }
+  .caption.expanded { -webkit-line-clamp: unset; display: block; overflow: visible; }
+  .hashes { margin-top: 6px; }
+  .tag.hash { font-size: 11px; color: var(--muted); }
 
   .stamp { position: absolute; top: 18px; z-index: 5; font-size: 28px; font-weight: 900; padding: 4px 12px; border: 4px solid;
     border-radius: 10px; opacity: 0; pointer-events: none; letter-spacing: 1px; }
@@ -408,12 +415,16 @@
           ${p ? `<span class="badge">${esc(PLATFORM[p] || p)}</span>` : ''}
           ${v.explore ? '<span class="badge explore">Experiment</span>' : ''}
           ${v.creator ? `<b>@${esc(String(v.creator).replace(/^@/, ''))}</b>` : ''}
+          ${v.creator_nickname ? `<span>${esc(v.creator_nickname)}</span>` : ''}
           ${v.posted_at ? `<span>· ${esc(ago(v.posted_at))}</span>` : ''}
           ${url ? `<a class="open" href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}
         </div>
+        ${v.creator_bio ? `<div class="bio">${esc(v.creator_bio)}</div>` : ''}
         <div class="stats">${stat('▶', s.views)}${stat('♥', s.likes)}${stat('💬', s.comments)}${stat('↗', s.shares)}${stat('🔖', s.saves)}</div>
         ${v.hook ? `<div class="hook">${esc(v.hook)}</div>` : ''}
         <div class="tags">${v.format ? `<span class="tag">${esc(v.format)}</span>` : ''}${(Array.isArray(v.tags) ? v.tags : []).slice(0, 5).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        ${v.caption ? `<div class="caption">${esc(v.caption)}</div>` : ''}
+        ${(Array.isArray(v.hashtags) && v.hashtags.length) ? `<div class="tags hashes">${v.hashtags.map((t) => `<span class="tag hash">#${esc(String(t).replace(/^#/, ''))}</span>`).join('')}</div>` : ''}
         ${v.promo_idea ? `<div class="idea"><span class="lbl">Use it for your music</span>${esc(v.promo_idea)}</div>` : ''}
         ${v.why_picked ? `<div class="why">Why Grok picked it: ${esc(v.why_picked)}</div>` : ''}
       </div>`;
@@ -447,6 +458,19 @@
     const c = document.createElement('div'); c.className = 'card'; c.id = 'card'; c.innerHTML = cardHtml(top, true);
     stage.appendChild(c);
     attachDrag(c);
+    const cap = c.querySelector('.caption');
+    if (cap && cap.scrollHeight > cap.clientHeight + 1) {
+      cap.classList.add('collapsible');
+      cap.setAttribute('role', 'button');
+      cap.setAttribute('aria-expanded', 'false');
+      cap.tabIndex = 0;
+      const tog = () => {
+        cap.classList.toggle('expanded');
+        cap.setAttribute('aria-expanded', cap.classList.contains('expanded') ? 'true' : 'false');
+      };
+      cap.addEventListener('click', tog);
+      cap.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
+    }
     paintStatus();
   }
 
