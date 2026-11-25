@@ -35,5 +35,28 @@
     "note": "",
     "swiped_at": "2026-11-25T22:46:31.370Z",
     "updated_at": "2026-11-25T22:46:34.222Z"
+  },
+  {
+    "video_id": "tiktok_7668736586611215638",
+    "url": "https://www.tiktok.com/@aburbright/video/7668736586611215638",
+    "decision": "like",
+    "reasons": [
+      "Format",
+      "Humor"
+    ],
+    "note": "",
+    "swiped_at": "2026-11-25T22:46:48.760Z",
+    "updated_at": "2026-11-25T22:46:53.785Z"
+  },
+  {
+    "video_id": "tiktok_7698503784493747470",
+    "url": "https://www.tiktok.com/@geneevarojr/video/7698503784493747470",
+    "decision": "dislike",
+    "reasons": [
+      "Seen it before"
+    ],
+    "note": "",
+    "swiped_at": "2026-11-25T22:46:57.871Z",
+    "updated_at": "2026-11-25T22:46:58.994Z"
   }
 ]
