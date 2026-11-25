@@ -1,8 +1,8 @@
 # Grok ↔ Inspo Swipe contract
 
-Simon swipes on the videos you find. Your job: add finds to `data/videos.json`, read his swipes from `data/swipes.json`, and get closer to his taste every run.
+Dominik swipes on the videos you find. Your job: add finds to `data/videos.json`, read his swipes from `data/swipes.json`, and get closer to his taste every run.
 
-Repo: `https://github.com/OWNER/REPO` · branch `main`
+Repo: `https://github.com/CodyKolby/inspo-swipe` · branch `main`
 
 ## 1. Add videos → `data/videos.json`
 
@@ -21,7 +21,7 @@ A JSON array. **Append only**: never delete, reorder or edit existing entries, n
   "hook": "What is said or shown in the first 2 seconds",
   "format": "Short label, e.g. Street reaction",
   "tags": ["music", "pov"],
-  "promo_idea": "How Simon could use this format to promote his music",
+  "promo_idea": "How Dominik could use this format to promote his music",
   "why_picked": "Which of his past swipes this is based on",
   "explore": false
 }
@@ -34,20 +34,20 @@ A JSON array. **Append only**: never delete, reorder or edit existing entries, n
 | `platform` | yes | `tiktok`, `instagram`, `youtube` or `x` |
 | `added_at` | yes | ISO 8601 UTC, used to show newest finds first |
 | `hook`, `format`, `promo_idea` | yes | Shown on the card |
-| `why_picked` | recommended | Shown on the card, lets Simon see your reasoning |
+| `why_picked` | recommended | Shown on the card, lets Dominik see your reasoning |
 | `explore` | optional | `true` for deliberate experiments outside his proven taste. Aim for ~20% of each batch |
 | everything else | optional | |
 
 How to write (GitHub contents API):
 
-1. `GET https://api.github.com/repos/OWNER/REPO/contents/data/videos.json?ref=main` → decode `content` (base64), keep `sha`.
+1. `GET https://api.github.com/repos/CodyKolby/inspo-swipe/contents/data/videos.json?ref=main` → decode `content` (base64), keep `sha`.
 2. Append your new entries.
 3. `PUT` the same URL with `{"message": "grok: +N videos", "content": "<base64 JSON>", "sha": "<sha>", "branch": "main"}` and header `Authorization: Bearer <your token>`.
 4. On `409`, re-read and retry.
 
 ## 2. Read feedback → `data/swipes.json`
 
-Read-only for you. Public URL: `https://raw.githubusercontent.com/OWNER/REPO/main/data/swipes.json` (can be cached ~5 min; the contents API is always fresh).
+Read-only for you. Public URL: `https://raw.githubusercontent.com/CodyKolby/inspo-swipe/main/data/swipes.json` (can be cached ~5 min; the contents API is always fresh).
 
 ```json
 {
@@ -62,7 +62,7 @@ Read-only for you. Public URL: `https://raw.githubusercontent.com/OWNER/REPO/mai
 
 - `decision`: `superlike` (strongest signal, "I'd make this") > `like` > `dislike`.
 - `reasons`: what drove the decision. Possible values: `Hook`, `Format`, `Topic`, `Editing`, `Sound`, `Humor`, `Fits my music`, `Easy to film`, `Seen it before`. On a dislike they mean "this part was the problem".
-- `note`: free text from Simon; treat it as a direct instruction.
+- `note`: free text from Dominik; treat it as a direct instruction.
 - A swipe can disappear (he undid it) or change (he edited reasons later). Always re-read the whole file.
 
 ## Each run
