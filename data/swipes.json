@@ -58,5 +58,13 @@
     "note": "producer advertisment not musician",
     "swiped_at": "2026-11-25T22:46:57.871Z",
     "updated_at": "2026-11-25T22:47:05.326Z"
+  },
+  {
+    "video_id": "tiktok_7708777047367159062",
+    "url": "https://www.tiktok.com/@mowgli4337/video/7708777047367159062",
+    "decision": "dislike",
+    "reasons": [],
+    "note": "",
+    "swiped_at": "2026-11-25T22:47:10.784Z"
   }
 ]
