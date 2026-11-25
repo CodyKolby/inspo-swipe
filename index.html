@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Inspo Swipe</title>
+<meta name="theme-color" content="#0e0e12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inspo">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root {
+    --bg: #0e0e12; --panel: #17171d; --panel2: #202029; --line: #2c2c37;
+    --text: #f3f3f6; --muted: #9a9aa8;
+    --like: #2ecc71; --nope: #ff4d5e; --super: #3fa9ff; --accent: #ff4f8b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  a { color: inherit; }
+  .app { max-width: 480px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) 12px env(safe-area-inset-bottom); }
+
+  header { display: flex; align-items: center; gap: 8px; padding: 10px 2px; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: -.2px; }
+  .count { color: var(--muted); font-size: 13px; }
+  .spacer { flex: 1; }
+  .status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted);
+    background: none; border: 0; padding: 4px 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #666; }
+  .dot.ok { background: var(--like); } .dot.busy { background: #f5b942; } .dot.err { background: var(--nope); }
+  .icon-btn { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; width: 36px; height: 36px;
+    display: grid; place-items: center; font-size: 16px; padding: 0; }
+
+  main { flex: 1; position: relative; min-height: 0; }
+  .card { position: absolute; inset: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    overflow: hidden; display: flex; flex-direction: column; will-change: transform; touch-action: pan-y;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .card.behind { transform: scale(.96) translateY(10px); opacity: .5; box-shadow: none; }
+  .card.anim { transition: transform .28s ease, opacity .28s ease; }
+  .media { flex: 1; min-height: 0; background: #000; position: relative; }
+  .media iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .fallback { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px;
+    background: linear-gradient(160deg, #2a1640, #10202e); }
+  .fallback img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; }
+  .fallback .inner { position: relative; }
+  .fallback .big { font-size: 54px; }
+  .pill-link { display: inline-block; margin-top: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.12);
+    text-decoration: none; font-weight: 600; }
+  .info { max-height: 46%; overflow-y: auto; padding: 12px 14px 14px; border-top: 1px solid var(--line); user-select: none; }
+  .meta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .meta b { color: var(--text); }
+  .meta .open { margin-left: auto; color: var(--text); text-decoration: none; background: var(--panel2);
+    padding: 3px 9px; border-radius: 999px; font-size: 12px; }
+  .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; padding: 2px 7px;
+    border-radius: 6px; background: var(--panel2); color: var(--text); }
+  .badge.explore { background: #3b2a5a; color: #d9c2ff; }
+  .stats { display: flex; gap: 12px; margin: 8px 0; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .stats span b { color: var(--text); font-weight: 600; }
+  .hook { font-size: 16px; font-weight: 600; margin: 6px 0; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  .tag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); }
+  .idea { margin-top: 8px; padding: 10px 12px; background: var(--panel2); border-radius: 12px; font-size: 14px; }
+  .idea .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--accent); display: block; margin-bottom: 3px; }
+  .why { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  .stamp { position: absolute; top: 18px; z-index: 5; font-size: 28px; font-weight: 900; padding: 4px 12px; border: 4px solid;
+    border-radius: 10px; opacity: 0; pointer-events: none; letter-spacing: 1px; }
+  .stamp.like { left: 18px; color: var(--like); transform: rotate(-14deg); }
+  .stamp.nope { right: 18px; color: var(--nope); transform: rotate(14deg); }
+  .stamp.super { left: 50%; top: 40%; transform: translateX(-50%) rotate(-6deg); color: var(--super); }
+
+  .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px;
+    border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); }
+  .empty h2 { color: var(--text); margin: 6px 0; font-size: 20px; }
+  .btn { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; font-weight: 600; margin: 4px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  footer { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 12px 0 10px; }
+  .act { border-radius: 50%; border: 2px solid; background: var(--panel); display: grid; place-items: center; padding: 0; transition: transform .1s; }
+  .act:active { transform: scale(.9); }
+  .act.nope { width: 62px; height: 62px; border-color: var(--nope); color: var(--nope); font-size: 26px; }
+  .act.like { width: 62px; height: 62px; border-color: var(--like); color: var(--like); font-size: 26px; }
+  .act.super { width: 52px; height: 52px; border-color: var(--super); color: var(--super); font-size: 22px; }
+  .act.undo { width: 40px; height: 40px; border-color: var(--line); color: var(--muted); font-size: 17px; }
+
+  #stage { position: absolute; inset: 0; }
+  .sheet { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 20; opacity: 0; pointer-events: none;
+    transform: translateY(14px); transition: opacity .2s ease, transform .2s ease;
+    background: rgba(23,23,29,.97); border: 1px solid var(--line); border-radius: 16px; padding: 12px;
+    box-shadow: 0 -6px 24px rgba(0,0,0,.45); }
+  .sheet.open { opacity: 1; transform: none; pointer-events: auto; }
+  .sheet-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sheet-head b { font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 7px 11px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); font-size: 14px; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .note { width: 100%; margin-top: 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 12px; color: var(--text); font: inherit; font-size: 16px; }
+
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; z-index: 30; padding: 16px; overflow-y: auto; }
+  .modal.open { display: block; }
+  .modal .box { max-width: 460px; margin: max(20px, env(safe-area-inset-top)) auto; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+  .modal h2 { margin: 0 0 10px; font-size: 18px; display: flex; align-items: center; }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  .modal input { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; color: var(--text); font: inherit; font-size: 16px; }
+  .help { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .help code { background: var(--panel2); padding: 1px 5px; border-radius: 5px; }
+  .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .saved-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .saved-item:last-child { border-bottom: 0; }
+  .saved-item .top { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  .saved-item .top a { margin-left: auto; }
+  .seg { display: flex; gap: 6px; margin-bottom: 6px; }
+  .seg button { flex: 1; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 7px; font-size: 13px; }
+  .seg button.on { border-color: var(--accent); color: var(--accent); }
+
+  .toast { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -150%);
+    background: var(--panel2); border: 1px solid var(--line); padding: 9px 14px; border-radius: 12px; font-size: 14px;
+    transition: transform .25s ease; z-index: 40; max-width: 90vw; }
+  .toast.show { transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Inspo</h1>
+    <span class="count" id="count"></span>
+    <span class="spacer"></span>
+    <button class="status" id="status" title="Sync status"><span class="dot" id="dot"></span><span id="statusText"></span></button>
+    <button class="icon-btn" id="savedBtn" title="Saved">★</button>
+    <button class="icon-btn" id="settingsBtn" title="Settings">⚙︎</button>
+  </header>
+
+  <main>
+    <div id="stage"></div>
+    <div class="sheet" id="sheet">
+    <div class="sheet-head"><b id="sheetTitle">Why?</b><span class="count">optional</span><span class="spacer"></span>
+      <button class="btn" id="sheetDone" style="margin:0;padding:6px 12px">Done</button></div>
+    <div class="chips" id="chips"></div>
+    <input class="note" id="note" placeholder="Note for Grok (optional)" autocomplete="off">
+  </div>
+  </main>
+
+  <footer>
+    <button class="act undo" id="undoBtn" title="Undo (Z)">↺</button>
+    <button class="act nope" id="nopeBtn" title="Dislike (←)">✕</button>
+    <button class="act super" id="superBtn" title="Super like (↑)">★</button>
+    <button class="act like" id="likeBtn" title="Like (→)">♥</button>
+  </footer>
+</div>
+
+
+<div class="modal" id="settings">
+  <div class="box">
+    <h2>Settings<span class="spacer"></span><button class="icon-btn" data-close>✕</button></h2>
+    <label>GitHub owner</label><input id="cfgOwner" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label>Repo</label><input id="cfgRepo" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label>Branch</label><input id="cfgBranch" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label>Personal access token</label><input id="cfgToken" type="password" autocomplete="off" placeholder="github_pat_…">
+    <div class="help">Fine-grained token → only this repo → <b>Contents: Read and write</b>. It stays in this browser only and is used to save your swipes to <code>data/swipes.json</code>.</div>
+    <div class="row">
+      <button class="btn primary" id="cfgSave">Save</button>
+      <button class="btn" id="cfgTest">Test connection</button>
+      <button class="btn" id="cfgClear">Remove token</button>
+    </div>
+    <div class="help" id="cfgResult"></div>
+  </div>
+</div>
+
+<div class="modal" id="saved">
+  <div class="box">
+    <h2>Saved<span class="spacer"></span><button class="icon-btn" data-close>✕</button></h2>
+    <div class="seg"><button data-f="superlike" class="on">★ Super</button><button data-f="like">♥ Liked</button><button data-f="dislike">✕ Disliked</button></div>
+    <div id="savedList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  // ---------- helpers ----------
+  const $ = (s) => document.querySelector(s);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeUrl = (u) => (/^https?:\/\//i.test(String(u || '')) ? String(u) : '');
+  const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+  const num = (n) => (n == null || n === '' || isNaN(n) ? null : compact.format(Number(n)));
+  const ago = (iso) => {
+    const t = Date.parse(iso); if (!t) return '';
+    const d = Math.floor((Date.now() - t) / 86400000);
+    return d <= 0 ? 'today' : d === 1 ? '1d ago' : d < 60 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago';
+  };
+  let toastTimer;
+  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); };
+
+  const REASONS = ['Hook', 'Format', 'Topic', 'Editing', 'Sound', 'Humor', 'Fits my music', 'Easy to film', 'Seen it before'];
+  const LABEL = { like: '♥ Like', superlike: '★ Super like', dislike: '✕ Dislike' };
+  const DEMO = [
+    { id: 'demo-1', platform: 'demo', creator: 'demo_creator', stats: { views: 1840000, likes: 210000, comments: 3100, shares: 18000 }, posted_at: new Date(Date.now() - 3 * 864e5).toISOString(), hook: '"POV: you played your song to a stranger on the tram"', format: 'Street reaction', promo_idea: 'Play the hook of your newest track to people on Kraków trams and film the first 2 seconds of their face.', why_picked: 'Demo card', emoji: '🎧' },
+    { id: 'demo-2', platform: 'demo', creator: 'bedroom_producer', stats: { views: 620000, likes: 48000, comments: 900, shares: 2600 }, posted_at: new Date(Date.now() - 6 * 864e5).toISOString(), hook: 'Text on screen: "this beat took 9 minutes"', format: 'Speed-run making a beat', promo_idea: 'Time-lapse building one of your tracks from zero, ending on the finished drop.', explore: true, emoji: '🎹' },
+    { id: 'demo-3', platform: 'demo', creator: 'lyricsnap', stats: { views: 2900000, likes: 400000, comments: 12000, shares: 51000 }, posted_at: new Date(Date.now() - 1 * 864e5).toISOString(), hook: '"Rate this lyric 1–10"', format: 'Lyric on screen + comment bait', promo_idea: 'One strong line from your song as big text, ask people to rate it, pin the best comment.', emoji: '✍️' },
+  ];
+
+  // ---------- config & state ----------
+  const detect = () => {
+    const h = location.hostname;
+    if (!h.endsWith('.github.io')) return {};
+    const seg = location.pathname.split('/').filter(Boolean)[0];
+    return { owner: h.split('.')[0], repo: seg || h };
+  };
+  let cfg = Object.assign({ branch: 'main' }, detect(), LS.get('inspo.cfg', {}));
+  const hasToken = () => !!(cfg.token && cfg.owner && cfg.repo);
+
+  let videos = [];               // from data/videos.json
+  let remote = {};               // video_id -> swipe (data/swipes.json)
+  let pending = LS.get('inspo.pending', {}); // video_id -> swipe not yet committed (or {_delete:true})
+  let undoStack = LS.get('inspo.undo', []);
+  let demo = false, demoSwipes = {};
+  let current = null, forceTop = null, sheetFor = null, lastLoad = 0;
+  let status = { kind: '', text: '' };
+
+  const savePending = () => LS.set('inspo.pending', pending);
+  const saveUndo = () => LS.set('inspo.undo', undoStack.slice(-50));
+  const swipeOf = (id) => {
+    if (demo) return demoSwipes[id] || null;
+    const p = pending[id];
+    if (p) return p._delete ? null : p;
+    return remote[id] || null;
+  };
+  const allSwipes = () => {
+    if (demo) return Object.values(demoSwipes);
+    const m = { ...remote };
+    for (const [id, p] of Object.entries(pending)) { if (p._delete) delete m[id]; else m[id] = p; }
+    return Object.values(m);
+  };
+  const deckList = () => videos.filter((v) => !swipeOf(v.id));
+
+  // ---------- GitHub API ----------
+  const b64enc = (str) => {
+    const bytes = new TextEncoder().encode(str); let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  };
+  const b64dec = (b64) => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, '')), (c) => c.charCodeAt(0)));
+  const api = (path, opts = {}) => fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}${path}`, {
+    ...opts, cache: 'no-store',
+    headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${cfg.token}`, 'X-GitHub-Api-Version': '2022-11-28', ...(opts.headers || {}) },
+  });
+  const ref = () => `?ref=${encodeURIComponent(cfg.branch || 'main')}`;
+  async function ghRead(file) {
+    const r = await api(`/contents/${file}${ref()}`);
+    if (r.status === 404) return { data: null, sha: null };
+    if (!r.ok) throw new Error(`GitHub ${r.status} reading ${file}`);
+    const j = await r.json();
+    let text;
+    if (j.encoding === 'base64') text = j.content ? b64dec(j.content) : '';
+    else { // files > 1 MB come without content
+      const rr = await api(`/contents/${file}${ref()}`, { headers: { Accept: 'application/vnd.github.raw+json' } });
+      if (!rr.ok) throw new Error(`GitHub ${rr.status} reading ${file}`);
+      text = await rr.text();
+    }
+    return { data: text.trim() ? JSON.parse(text) : null, sha: j.sha };
+  }
+  function ghWrite(file, data, sha, message) {
+    const body = { message, content: b64enc(JSON.stringify(data, null, 2) + '\n'), branch: cfg.branch || 'main' };
+    if (sha) body.sha = sha;
+    return api(`/contents/${file}`, { method: 'PUT', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+  }
+  async function fetchStatic(file) {
+    const r = await fetch(`${file}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`${r.status} loading ${file}`);
+    const t = await r.text(); return t.trim() ? JSON.parse(t) : null;
+  }
+
+  // ---------- data ----------
+  const normVideos = (data) => {
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.videos) ? data.videos : []);
+    const seen = new Set();
+    return arr
+      .map((v, i) => ({ ...v, id: String(v.id || v.url || 'idx-' + i), _i: i }))
+      .filter((v) => (seen.has(v.id) ? false : seen.add(v.id)))
+      .sort((a, b) => (Date.parse(b.added_at) || 0) - (Date.parse(a.added_at) || 0) || b._i - a._i); // newest finds first
+  };
+  const setRemote = (data) => { remote = {}; (Array.isArray(data) ? data : []).forEach((s) => s && s.video_id && (remote[s.video_id] = s)); };
+
+  async function load() {
+    if (demo) return;
+    setStatus('busy', 'Loading');
+    lastLoad = Date.now();
+    try {
+      if (hasToken()) {
+        const [v, s] = await Promise.all([ghRead('data/videos.json'), ghRead('data/swipes.json')]);
+        videos = normVideos(v.data); setRemote(s.data);
+      } else {
+        videos = normVideos(await fetchStatic('data/videos.json'));
+        setRemote(await fetchStatic('data/swipes.json').catch(() => []));
+      }
+      render();
+      if (Object.keys(pending).length) sync(); else updateStatus();
+    } catch (e) {
+      setStatus('err', 'Load failed');
+      status.detail = e.message;
+      render();
+    }
+  }
+
+  // ---------- sync ----------
+  let syncTimer = null, syncing = false, syncAgain = false;
+  const scheduleSync = (ms = 4000) => { clearTimeout(syncTimer); syncTimer = setTimeout(sync, ms); updateStatus(); };
+  async function sync() {
+    clearTimeout(syncTimer);
+    if (demo || !hasToken() || !Object.keys(pending).length) return updateStatus();
+    if (syncing) { syncAgain = true; return; }
+    syncing = true; setStatus('busy', 'Saving');
+    const snap = JSON.parse(JSON.stringify(pending));
+    let ok = false, err = '';
+    try {
+      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+        const { data, sha } = await ghRead('data/swipes.json');
+        const map = {};
+        (Array.isArray(data) ? data : []).forEach((s) => s && s.video_id && (map[s.video_id] = s));
+        const n = { like: 0, superlike: 0, dislike: 0 };
+        for (const [id, e] of Object.entries(snap)) {
+          if (e._delete) delete map[id]; else { map[id] = e; n[e.decision] = (n[e.decision] || 0) + 1; }
+        }
+        const arr = Object.values(map).sort((a, b) => String(a.swiped_at).localeCompare(String(b.swiped_at)));
+        const msg = `swipes: ♥${n.like} ★${n.superlike} ✕${n.dislike}`;
+        const r = await ghWrite('data/swipes.json', arr, sha, msg);
+        if (r.ok) {
+          ok = true; remote = map;
+          for (const [id, e] of Object.entries(snap)) if (JSON.stringify(pending[id]) === JSON.stringify(e)) delete pending[id];
+          savePending();
+        } else if (r.status !== 409 && r.status !== 422) {
+          err = `GitHub ${r.status}` + (r.status === 401 || r.status === 403 ? ' — check token' : '');
+          break;
+        } else err = `GitHub ${r.status} (conflict)`;
+      }
+    } catch (e) { err = e.message; }
+    syncing = false;
+    if (ok) updateStatus(); else { setStatus('err', 'Not saved'); status.detail = err + ' — swipes are kept on this device and retried.'; }
+    if (syncAgain) { syncAgain = false; scheduleSync(500); }
+  }
+
+  function setStatus(kind, text) { status = { kind, text }; paintStatus(); }
+  function updateStatus() {
+    const n = Object.keys(pending).length;
+    if (demo) status = { kind: '', text: 'Demo' };
+    else if (!hasToken()) status = { kind: n ? 'err' : '', text: n ? `${n} not saved` : 'Read-only', detail: 'Add a GitHub token in Settings to save swipes.' };
+    else if (n) status = { kind: 'busy', text: `${n} unsaved` };
+    else status = { kind: 'ok', text: 'Saved' };
+    paintStatus();
+  }
+  function paintStatus() {
+    $('#dot').className = 'dot ' + (status.kind || '');
+    $('#statusText').textContent = status.text || '';
+    const left = demo ? DEMO.filter((v) => !demoSwipes[v.id]).length : deckList().length;
+    $('#count').textContent = left ? `${left} left` : '';
+  }
+
+  // ---------- rendering ----------
+  const PLATFORM = { tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', x: 'X', twitter: 'X', demo: 'Demo' };
+  const platformOf = (v) => {
+    if (v.platform) return String(v.platform).toLowerCase();
+    const u = String(v.url || '');
+    if (/tiktok\.com/.test(u)) return 'tiktok';
+    if (/instagram\.com/.test(u)) return 'instagram';
+    if (/youtube\.com|youtu\.be/.test(u)) return 'youtube';
+    if (/(twitter|x)\.com/.test(u)) return 'x';
+    return '';
+  };
+  function embedUrl(v) {
+    const u = String(v.url || ''); let m;
+    if ((m = u.match(/tiktok\.com\/.*\/video\/(\d+)/))) return `https://www.tiktok.com/player/v1/${m[1]}?music_info=1&description=1&rel=0`;
+    if ((m = u.match(/instagram\.com\/(?:reel|reels|p)\/([\w-]+)/))) return `https://www.instagram.com/reel/${m[1]}/embed/`;
+    if ((m = u.match(/youtube\.com\/shorts\/([\w-]+)/) || u.match(/[?&]v=([\w-]+)/) || u.match(/youtu\.be\/([\w-]+)/))) return `https://www.youtube.com/embed/${m[1]}?playsinline=1&rel=0`;
+    return '';
+  }
+
+  function cardHtml(v, live) {
+    const p = platformOf(v);
+    const url = safeUrl(v.url);
+    const s = v.stats || {};
+    const stat = (icon, val) => (num(val) ? `<span>${icon} <b>${num(val)}</b></span>` : '');
+    const emb = live ? embedUrl(v) : '';
+    const media = emb
+      ? `<iframe src="${esc(emb)}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>`
+      : `<div class="fallback">${safeUrl(v.thumbnail) ? `<img src="${esc(v.thumbnail)}" alt="">` : ''}<div class="inner">
+           <div class="big">${esc(v.emoji || '🎬')}</div>
+           ${url ? `<a class="pill-link" href="${esc(url)}" target="_blank" rel="noopener">Watch on ${esc(PLATFORM[p] || 'site')} ↗</a>` : ''}
+         </div></div>`;
+    return `
+      <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div><div class="stamp super">SUPER</div>
+      <div class="media">${media}</div>
+      <div class="info">
+        <div class="meta">
+          ${p ? `<span class="badge">${esc(PLATFORM[p] || p)}</span>` : ''}
+          ${v.explore ? '<span class="badge explore">Experiment</span>' : ''}
+          ${v.creator ? `<b>@${esc(String(v.creator).replace(/^@/, ''))}</b>` : ''}
+          ${v.posted_at ? `<span>· ${esc(ago(v.posted_at))}</span>` : ''}
+          ${url ? `<a class="open" href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}
+        </div>
+        <div class="stats">${stat('▶', s.views)}${stat('♥', s.likes)}${stat('💬', s.comments)}${stat('↗', s.shares)}${stat('🔖', s.saves)}</div>
+        ${v.hook ? `<div class="hook">${esc(v.hook)}</div>` : ''}
+        <div class="tags">${v.format ? `<span class="tag">${esc(v.format)}</span>` : ''}${(Array.isArray(v.tags) ? v.tags : []).slice(0, 5).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        ${v.promo_idea ? `<div class="idea"><span class="lbl">Use it for your music</span>${esc(v.promo_idea)}</div>` : ''}
+        ${v.why_picked ? `<div class="why">Why Grok picked it: ${esc(v.why_picked)}</div>` : ''}
+      </div>`;
+  }
+
+  function render() {
+    const stage = $('#stage');
+    const list = demo ? DEMO.filter((v) => !demoSwipes[v.id]) : deckList();
+    let top = (forceTop && list.find((v) => v.id === forceTop)) || list[0] || null;
+    forceTop = null;
+    if (current && top && current.id === top.id && stage.querySelector('.card:not(.behind)')) { paintStatus(); return; } // keep playing video
+    current = top;
+    stage.innerHTML = '';
+    if (!top) {
+      const nothing = !demo && videos.length === 0;
+      stage.innerHTML = `<div class="empty"><div>
+        <div style="font-size:42px">${nothing ? '📭' : '✅'}</div>
+        <h2>${nothing ? 'No videos yet' : "You're all caught up"}</h2>
+        <div>${demo ? 'That was the demo.' : nothing ? 'Grok adds finds to data/videos.json on its schedule.' : 'Grok will send more on its next run.'}</div>
+        <div style="margin-top:14px">
+          ${demo ? '<button class="btn primary" id="exitDemo">Exit demo</button>' : '<button class="btn primary" id="reload">Check for new</button>'}
+          ${!demo ? '<button class="btn" id="tryDemo">Try demo cards</button>' : ''}
+        </div></div></div>`;
+      $('#reload') && ($('#reload').onclick = load);
+      $('#tryDemo') && ($('#tryDemo').onclick = () => { demo = true; demoSwipes = {}; undoStack = []; render(); updateStatus(); });
+      $('#exitDemo') && ($('#exitDemo').onclick = () => { demo = false; undoStack = LS.get('inspo.undo', []); render(); updateStatus(); });
+      paintStatus(); return;
+    }
+    const next = list.find((v) => v.id !== top.id);
+    if (next) { const b = document.createElement('div'); b.className = 'card behind'; b.innerHTML = cardHtml(next, false); stage.appendChild(b); }
+    const c = document.createElement('div'); c.className = 'card'; c.id = 'card'; c.innerHTML = cardHtml(top, true);
+    stage.appendChild(c);
+    attachDrag(c);
+    paintStatus();
+  }
+
+  // ---------- gestures ----------
+  function attachDrag(card) {
+    let sx = 0, sy = 0, dx = 0, dy = 0, active = false, horiz = null, pid = null;
+    const stamps = { like: card.querySelector('.stamp.like'), nope: card.querySelector('.stamp.nope'), sup: card.querySelector('.stamp.super') };
+    const paint = () => {
+      card.style.transform = `translate(${dx}px, ${Math.min(dy, 0) * 0.6}px) rotate(${dx / 18}deg)`;
+      stamps.like.style.opacity = Math.max(0, Math.min(1, dx / 90));
+      stamps.nope.style.opacity = Math.max(0, Math.min(1, -dx / 90));
+    };
+    card.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('a, button, iframe') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      active = true; horiz = null; sx = e.clientX; sy = e.clientY; dx = dy = 0; pid = e.pointerId;
+      card.classList.remove('anim');
+    });
+    card.addEventListener('pointermove', (e) => {
+      if (!active || e.pointerId !== pid) return;
+      dx = e.clientX - sx; dy = e.clientY - sy;
+      if (horiz === null && Math.hypot(dx, dy) > 8) {
+        horiz = Math.abs(dx) > Math.abs(dy);
+        if (horiz) { try { card.setPointerCapture(pid); } catch {} } else { active = false; return; } // vertical = scroll the info
+      }
+      if (horiz) { dy = 0; paint(); }
+    });
+    const end = () => {
+      if (!active) return; active = false;
+      if (horiz && Math.abs(dx) > 100) return decide(dx > 0 ? 'like' : 'dislike');
+      card.classList.add('anim'); dx = dy = 0; paint();
+    };
+    card.addEventListener('pointerup', end);
+    card.addEventListener('pointercancel', end);
+  }
+
+  function flyOut(decision, done) {
+    const card = $('#card'); if (!card) return done();
+    const st = card.querySelector(decision === 'like' ? '.stamp.like' : decision === 'dislike' ? '.stamp.nope' : '.stamp.super');
+    if (st) st.style.opacity = 1;
+    card.classList.add('anim');
+    const w = window.innerWidth;
+    card.style.transform = decision === 'superlike' ? `translateY(-120%) scale(.9)` : `translate(${decision === 'like' ? w : -w}px, 40px) rotate(${decision === 'like' ? 20 : -20}deg)`;
+    card.style.opacity = '0';
+    setTimeout(done, 260);
+  }
+
+  // ---------- actions ----------
+  function decide(decision) {
+    if (!current) return;
+    if (sheetFor) closeSheet();
+    const v = current;
+    const entry = { video_id: v.id, url: v.url || null, decision, reasons: [], note: '', swiped_at: new Date().toISOString() };
+    if (demo) demoSwipes[v.id] = entry;
+    else { pending[v.id] = entry; savePending(); scheduleSync(); }
+    undoStack.push(v.id); if (!demo) saveUndo();
+    current = null;
+    flyOut(decision, () => { render(); openSheet(v.id, decision); });
+  }
+
+  function undo() {
+    const id = undoStack.pop();
+    if (!id) return toast('Nothing to undo');
+    if (demo) delete demoSwipes[id];
+    else {
+      if (remote[id]) pending[id] = { video_id: id, _delete: true }; else delete pending[id];
+      savePending(); saveUndo(); scheduleSync();
+    }
+    closeSheet(); forceTop = id; current = null; render();
+  }
+
+  function patchSwipe(id, patch) {
+    if (demo) { if (demoSwipes[id]) Object.assign(demoSwipes[id], patch); return; }
+    const base = swipeOf(id); if (!base) return;
+    pending[id] = { ...base, ...patch, updated_at: new Date().toISOString() };
+    savePending(); scheduleSync(5000);
+  }
+
+  // ---------- reason sheet ----------
+  function openSheet(id, decision) {
+    sheetFor = id;
+    $('#sheetTitle').textContent = decision === 'dislike' ? 'Why not?' : decision === 'superlike' ? 'Why the ★?' : 'Why ♥?';
+    const sw = swipeOf(id) || { reasons: [], note: '' };
+    $('#chips').innerHTML = REASONS.map((r) => `<button class="chip ${sw.reasons?.includes(r) ? 'on' : ''}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
+    $('#note').value = sw.note || '';
+    $('#sheet').classList.add('open');
+    armSheetTimer();
+  }
+  let sheetTimer;
+  function armSheetTimer(ms = 8000) { // tucks itself away if ignored
+    clearTimeout(sheetTimer);
+    sheetTimer = setTimeout(() => { if (document.activeElement !== $('#note')) closeSheet(); else armSheetTimer(); }, ms);
+  }
+  function closeSheet() {
+    if (sheetFor) {
+      const sw = swipeOf(sheetFor); const note = $('#note').value.trim();
+      if (sw && note !== (sw.note || '')) patchSwipe(sheetFor, { note });
+    }
+    clearTimeout(sheetTimer); sheetFor = null; $('#note').blur(); $('#sheet').classList.remove('open');
+  }
+  $('#chips').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip'); if (!b || !sheetFor) return;
+    const sw = swipeOf(sheetFor); if (!sw) return;
+    const r = b.dataset.r; const set = new Set(sw.reasons || []);
+    set.has(r) ? set.delete(r) : set.add(r);
+    b.classList.toggle('on', set.has(r));
+    patchSwipe(sheetFor, { reasons: [...set] });
+    armSheetTimer(10000);
+  });
+  $('#note').addEventListener('input', () => armSheetTimer(15000));
+  $('#note').addEventListener('keydown', (e) => { if (e.key === 'Enter') closeSheet(); e.stopPropagation(); });
+  $('#sheetDone').onclick = closeSheet;
+
+  const act = (d) => decide(d);
+  $('#likeBtn').onclick = () => act('like');
+  $('#nopeBtn').onclick = () => act('dislike');
+  $('#superBtn').onclick = () => act('superlike');
+  $('#undoBtn').onclick = undo;
+  document.addEventListener('keydown', (e) => {
+    if (document.querySelector('.modal.open') || e.target.matches('input')) return;
+    if (e.key === 'ArrowRight') act('like');
+    else if (e.key === 'ArrowLeft') act('dislike');
+    else if (e.key === 'ArrowUp') { e.preventDefault(); act('superlike'); }
+    else if (e.key.toLowerCase() === 'z') undo();
+    else if (e.key === 'Escape') closeSheet();
+  });
+
+  // ---------- status, settings, saved ----------
+  $('#status').onclick = () => toast(status.detail || status.text || '');
+  const openModal = (id) => $(id).classList.add('open');
+  document.querySelectorAll('.modal').forEach((m) => m.addEventListener('click', (e) => {
+    if (e.target === m || e.target.closest('[data-close]')) m.classList.remove('open');
+  }));
+
+  $('#settingsBtn').onclick = () => {
+    $('#cfgOwner').value = cfg.owner || ''; $('#cfgRepo').value = cfg.repo || '';
+    $('#cfgBranch').value = cfg.branch || 'main'; $('#cfgToken').value = cfg.token || '';
+    $('#cfgResult').textContent = ''; openModal('#settings');
+  };
+  const readForm = () => ({ owner: $('#cfgOwner').value.trim(), repo: $('#cfgRepo').value.trim(), branch: $('#cfgBranch').value.trim() || 'main', token: $('#cfgToken').value.trim() });
+  $('#cfgSave').onclick = () => { cfg = readForm(); LS.set('inspo.cfg', cfg); $('#settings').classList.remove('open'); toast('Saved'); load(); };
+  $('#cfgClear').onclick = () => { $('#cfgToken').value = ''; cfg = { ...readForm(), token: '' }; LS.set('inspo.cfg', cfg); $('#cfgResult').textContent = 'Token removed from this browser.'; updateStatus(); };
+  $('#cfgTest').onclick = async () => {
+    const old = cfg; cfg = readForm(); const out = $('#cfgResult'); out.textContent = 'Testing…';
+    try {
+      const r = await api('');
+      if (!r.ok) out.textContent = `✕ GitHub ${r.status}. Check owner, repo and token.`;
+      else { const j = await r.json(); out.textContent = j.permissions?.push ? '✓ Connected — can read and write.' : '⚠ Connected, but the token cannot write. Give it Contents: Read and write.'; }
+    } catch (e) { out.textContent = '✕ ' + e.message; }
+    cfg = old;
+  };
+
+  let savedFilter = 'superlike';
+  function paintSaved() {
+    const byId = Object.fromEntries((demo ? DEMO : videos).map((v) => [v.id, v]));
+    const items = allSwipes().filter((s) => s.decision === savedFilter).sort((a, b) => String(b.swiped_at).localeCompare(String(a.swiped_at)));
+    $('#savedList').innerHTML = items.length ? items.map((s) => {
+      const v = byId[s.video_id] || {}; const url = safeUrl(v.url || s.url);
+      return `<div class="saved-item">
+        <div class="top"><span>${esc(LABEL[s.decision])}</span>${v.creator ? `<b>@${esc(String(v.creator).replace(/^@/, ''))}</b>` : ''}<span>${esc(ago(s.swiped_at))}</span>
+          ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</div>
+        ${v.hook ? `<div class="hook" style="font-size:15px">${esc(v.hook)}</div>` : ''}
+        ${v.promo_idea ? `<div class="idea"><span class="lbl">Use it for your music</span>${esc(v.promo_idea)}</div>` : ''}
+        ${(s.reasons || []).length || s.note ? `<div class="tags" style="margin-top:8px">${(s.reasons || []).map((r) => `<span class="tag">${esc(r)}</span>`).join('')}${s.note ? `<span class="tag">“${esc(s.note)}”</span>` : ''}</div>` : ''}
+      </div>`;
+    }).join('') : `<div class="help">Nothing here yet.</div>`;
+  }
+  $('#savedBtn').onclick = () => { paintSaved(); openModal('#saved'); };
+  document.querySelectorAll('.seg button').forEach((b) => b.onclick = () => {
+    savedFilter = b.dataset.f; document.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x === b)); paintSaved();
+  });
+
+  // ---------- lifecycle ----------
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { closeSheet(); sync(); }
+    else if (Date.now() - lastLoad > 120000) load();
+  });
+  window.addEventListener('online', () => sync());
+  load();
+})();
+</script>
+</body>
+</html>
