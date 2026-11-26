@@ -549,8 +549,12 @@
     "video_id": "tiktok_7705932884456115469",
     "url": "https://www.tiktok.com/@loozemj/video/7705932884456115469",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:47:33.701Z"
+    "reasons": [
+      "Sound",
+      "Format"
+    ],
+    "note": "It went viral becauese he was dressed up like an michael jackson",
+    "swiped_at": "2026-11-26T18:47:33.701Z",
+    "updated_at": "2026-11-26T18:47:47.541Z"
   }
 ]
