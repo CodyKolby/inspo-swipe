@@ -509,5 +509,16 @@
     "note": "It's just cover of popular song, it won't go viral with my song + I can't play my song on an instrument",
     "swiped_at": "2026-11-26T18:45:48.761Z",
     "updated_at": "2026-11-26T18:45:50.427Z"
+  },
+  {
+    "video_id": "tiktok_7684851020077272350",
+    "url": "https://www.tiktok.com/@itssscartaaaa/video/7684851020077272350",
+    "decision": "like",
+    "reasons": [
+      "Hook"
+    ],
+    "note": "",
+    "swiped_at": "2026-11-26T18:46:14.144Z",
+    "updated_at": "2026-11-26T18:46:15.077Z"
   }
 ]
