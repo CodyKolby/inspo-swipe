@@ -408,8 +408,11 @@
     "video_id": "tiktok_7666256400728722695",
     "url": "https://www.tiktok.com/@jasleemundial/video/7666256400728722695",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:33:07.071Z"
+    "reasons": [
+      "Sound"
+    ],
+    "note": "Cover, nothing more, it won't go viral with my original song",
+    "swiped_at": "2026-11-26T18:33:07.071Z",
+    "updated_at": "2026-11-26T18:33:19.144Z"
   }
 ]
