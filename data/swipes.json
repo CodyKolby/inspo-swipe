@@ -615,8 +615,22 @@
     "video_id": "tiktok_7662978000572484878",
     "url": "https://www.tiktok.com/@eveswrld333/video/7662978000572484878",
     "decision": "dislike",
-    "reasons": [],
+    "reasons": [
+      "Topic"
+    ],
+    "note": "I'd need a stage and crowd reaction, it would take too long to organise it",
+    "swiped_at": "2026-11-26T18:50:54.865Z",
+    "updated_at": "2026-11-26T18:51:12.385Z"
+  },
+  {
+    "video_id": "tiktok_7696678596483550477",
+    "url": "https://www.tiktok.com/@teslakaraoke/video/7696678596483550477",
+    "decision": "dislike",
+    "reasons": [
+      "Seen it before"
+    ],
     "note": "",
-    "swiped_at": "2026-11-26T18:50:54.865Z"
+    "swiped_at": "2026-11-26T18:51:15.645Z",
+    "updated_at": "2026-11-26T18:51:16.518Z"
   }
 ]
