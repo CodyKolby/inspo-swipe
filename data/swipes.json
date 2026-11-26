@@ -403,5 +403,13 @@
     "note": "This is really good example, I can just put my song in there and doesn't change anything",
     "swiped_at": "2026-11-26T18:32:35.241Z",
     "updated_at": "2026-11-26T18:32:54.708Z"
+  },
+  {
+    "video_id": "tiktok_7666256400728722695",
+    "url": "https://www.tiktok.com/@jasleemundial/video/7666256400728722695",
+    "decision": "dislike",
+    "reasons": [],
+    "note": "",
+    "swiped_at": "2026-11-26T18:33:07.071Z"
   }
 ]
