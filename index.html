@@ -129,6 +129,50 @@
   .seg button { flex: 1; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 7px; font-size: 13px; }
   .seg button.on { border-color: var(--accent); color: var(--accent); }
 
+  /* window switcher + hooks */
+  .views { display: flex; gap: 6px; padding: 8px 2px 0; }
+  .views button { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .views button.on { color: var(--text); border-color: var(--accent); background: var(--panel2); }
+  .view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .view[hidden], .sub[hidden] { display: none !important; }
+  .sub { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .hseg { margin: 0 0 8px; }
+  .hseg button .n { color: var(--accent); font-weight: 700; }
+  .hookart { position: absolute; inset: 0; display: grid; place-items: center; padding: 22px; text-align: center;
+    background: linear-gradient(160deg, #2a1640, #10202e); overflow: hidden; }
+  .hookart img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; }
+  .hookart .htxt { position: relative; font-size: 24px; line-height: 1.25; font-weight: 800; color: #fff;
+    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 3px 10px rgba(0,0,0,.6); overflow-wrap: anywhere; }
+  .hookart .htxt.unknown { font-size: 17px; color: var(--muted); text-shadow: none; font-weight: 600; }
+  .hookart .play { position: absolute; bottom: 12px; right: 12px; }
+  .trans { margin: 6px 0; padding: 8px 10px; border-left: 3px solid var(--super); background: var(--panel2); border-radius: 8px; font-size: 14px; }
+  .trans .lbl, .critic .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); display: block; }
+  .critic { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--line); font-size: 13px; }
+  .critic b.APPROVE { color: var(--like); } .critic b.REDO { color: var(--nope); }
+  .list { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 12px; }
+  .litem { display: flex; gap: 10px; padding: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; }
+  .litem input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); flex: none; margin-top: 2px; }
+  .litem .body { flex: 1; min-width: 0; }
+  .litem .htext { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+  .litem .sub2 { font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+  .litem .top { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 4px; flex-wrap: wrap; }
+  .litem .top a { margin-left: auto; color: var(--text); }
+  .bar { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+  .bar .btn { margin: 0; }
+  .sect { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 14px 2px 8px; }
+  .hempty { text-align: center; color: var(--muted); padding: 40px 18px; border: 1px dashed var(--line); border-radius: 16px; }
+  .hempty h2 { color: var(--text); margin: 6px 0; font-size: 19px; }
+  .edit { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
+  .edit video { width: 100%; max-height: 62vh; background: #000; display: block; }
+  .edit .novid { padding: 30px; text-align: center; color: var(--muted); background: #000; }
+  .edit .pad { padding: 12px 14px; }
+  .edit .plats { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0 4px; font-size: 14px; }
+  .edit .plats label { display: flex; align-items: center; gap: 6px; }
+  .edit .plats input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .btn.ok { background: var(--like); border-color: var(--like); color: #062; }
+  .btn.bad { background: transparent; border-color: var(--nope); color: var(--nope); }
+  .pillst { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--panel2); text-transform: uppercase; }
+  .pillst.approved, .pillst.posted { color: var(--like); } .pillst.rejected { color: var(--nope); }
   .toast { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -150%);
     background: var(--panel2); border: 1px solid var(--line); padding: 9px 14px; border-radius: 12px; font-size: 14px;
     transition: transform .25s ease; z-index: 40; max-width: 90vw; }
@@ -137,6 +181,8 @@
 </head>
 <body>
 <div class="app">
+  <nav class="views" id="views"><button data-view="inspo" class="on">Inspo</button><button data-view="hooks">Hooks</button></nav>
+  <div class="view" id="inspoView">
   <header>
     <h1>Inspo</h1>
     <span class="count" id="count"></span>
@@ -162,6 +208,53 @@
     <button class="act super" id="superBtn" title="Super like (↑)">★</button>
     <button class="act like" id="likeBtn" title="Like (→)">♥</button>
   </footer>
+  </div>
+
+  <div class="view" id="hooksView" hidden>
+    <header>
+      <h1>Hooks</h1>
+      <span class="count" id="hCount"></span>
+      <span class="spacer"></span>
+      <button class="status" id="hStatus" title="Sync status"><span class="dot" id="hDot"></span><span id="hStatusText"></span></button>
+      <button class="icon-btn" id="hReloadBtn" title="Reload">↻</button>
+    </header>
+    <div class="seg hseg" id="hSeg">
+      <button data-sub="swipe" class="on">Swipe</button>
+      <button data-sub="ready">Ready to edit <span class="n" id="readyN"></span></button>
+      <button data-sub="review">Review edits <span class="n" id="reviewN"></span></button>
+    </div>
+
+    <section class="sub" id="hSwipe">
+      <main>
+        <div id="hStage" style="position:absolute;inset:0"></div>
+        <div class="sheet" id="hSheet">
+          <div class="sheet-head"><b id="hSheetTitle">Why?</b><span class="count">optional</span><span class="spacer"></span>
+            <button class="btn" id="hSheetDone" style="margin:0;padding:6px 12px">Done</button></div>
+          <div class="chips" id="hChips"></div>
+          <input class="note" id="hNote" placeholder="Note for the hook scout (optional)" autocomplete="off">
+        </div>
+      </main>
+      <footer>
+        <button class="act undo" id="hUndoBtn" title="Undo (Z)">↺</button>
+        <button class="act nope" id="hNopeBtn" title="Dislike (←)">✕</button>
+        <button class="act super" id="hSuperBtn" title="Super like (↑)">★</button>
+        <button class="act like" id="hLikeBtn" title="Like (→)">♥</button>
+      </footer>
+    </section>
+
+    <section class="sub" id="hReady" hidden>
+      <div class="list" id="readyList"></div>
+      <div class="bar">
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="readyAll" style="width:18px;height:18px;accent-color:var(--accent)"> All</label>
+        <span class="spacer"></span>
+        <button class="btn primary" id="submitBtn" disabled>Submit for editing</button>
+      </div>
+    </section>
+
+    <section class="sub" id="hReview" hidden>
+      <div class="list" id="reviewList"></div>
+    </section>
+  </div>
 </div>
 
 
@@ -565,7 +658,7 @@
   $('#superBtn').onclick = () => act('superlike');
   $('#undoBtn').onclick = undo;
   document.addEventListener('keydown', (e) => {
-    if (document.querySelector('.modal.open') || e.target.matches('input')) return;
+    if (document.querySelector('.modal.open') || e.target.matches('input') || document.body.dataset.view === 'hooks') return;
     if (e.key === 'ArrowRight') act('like');
     else if (e.key === 'ArrowLeft') act('dislike');
     else if (e.key === 'ArrowUp') { e.preventDefault(); act('superlike'); }
@@ -606,8 +699,8 @@
     }).join('') : `<div class="help">Nothing here yet.</div>`;
   }
   $('#savedBtn').onclick = () => { paintSaved(); openModal('#saved'); };
-  document.querySelectorAll('.seg button').forEach((b) => b.onclick = () => {
-    savedFilter = b.dataset.f; document.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x === b)); paintSaved();
+  document.querySelectorAll('#saved .seg button').forEach((b) => b.onclick = () => {
+    savedFilter = b.dataset.f; document.querySelectorAll('#saved .seg button').forEach((x) => x.classList.toggle('on', x === b)); paintSaved();
   });
 
   // ---------- lifecycle ----------
@@ -617,6 +710,371 @@
   });
   window.addEventListener('online', () => sync());
   load();
+})();
+</script>
+<script>
+// ================= Hooks window (hook scout → editing → review) =================
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeUrl = (u) => (/^https?:\/\//i.test(String(u || '')) ? String(u) : '');
+  const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+  const num = (n) => (n == null || n === '' || isNaN(n) ? null : compact.format(Number(n)));
+  const ago = (iso) => { const t = Date.parse(iso); if (!t) return ''; const d = Math.floor((Date.now() - t) / 86400000);
+    return d <= 0 ? 'today' : d === 1 ? '1d ago' : d < 60 ? d + 'd ago' : Math.floor(d / 30) + 'mo ago'; };
+  let toastTimer;
+  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); };
+
+  const SB_URL = 'https://nzefxnfkzybyhillndhz.supabase.co';
+  const SB_KEY = 'sb_publishable_IQrtX4qrePB1NDnAU73xyQ_KHzvCwM6';
+  const sb = (path, opts = {}) => fetch(`${SB_URL}/rest/v1/${path}`, { ...opts, cache: 'no-store',
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+  async function sbGet(path) { const r = await sb(path); if (!r.ok) throw new Error(`Supabase ${r.status} reading ${path.split('?')[0]}`); return r.json(); }
+  async function rpc(fn, args) {
+    const r = await sb('rpc/' + fn, { method: 'POST', body: JSON.stringify(args) });
+    const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch {}
+    if (!r.ok) throw new Error((j && j.message) || `Supabase ${r.status}`);
+    return j;
+  }
+
+  const REASONS = ['Hook text', 'Funny', 'Relatable', 'Fits my music', 'Easy to adapt', 'Seen it before'];
+  const LANG = { pl: 'Polish', en: 'English', es: 'Spanish', de: 'German', fr: 'French', pt: 'Portuguese', it: 'Italian' };
+  const ROUTE = { tiktok: 'TikTok → Edits Chef', instagram: 'Instagram trial reel → Trial reels AGNT' };
+
+  // ---------- window switcher ----------
+  let hooksLoaded = false;
+  function setView(v) {
+    v = v === 'hooks' ? 'hooks' : 'inspo';
+    document.body.dataset.view = v;
+    $('#inspoView').hidden = v !== 'inspo';
+    $('#hooksView').hidden = v !== 'hooks';
+    document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
+    LS.set('app.view', v);
+    if (v === 'hooks') { if (!hooksLoaded || Date.now() - lastLoad > 120000) load(); }
+    else { closeSheet(); const ifr = document.querySelector('#hStage iframe'); if (ifr) render(true); }
+  }
+  document.querySelectorAll('#views button').forEach((b) => (b.onclick = () => setView(b.dataset.view)));
+
+  let sub = LS.get('hooks.sub', 'swipe');
+  function setSub(s) {
+    sub = ['swipe', 'ready', 'review'].includes(s) ? s : 'swipe'; LS.set('hooks.sub', sub);
+    document.querySelectorAll('#hSeg button').forEach((b) => b.classList.toggle('on', b.dataset.sub === sub));
+    $('#hSwipe').hidden = sub !== 'swipe'; $('#hReady').hidden = sub !== 'ready'; $('#hReview').hidden = sub !== 'review';
+    if (sub !== 'swipe') closeSheet();
+    document.querySelectorAll('#reviewList video').forEach((v) => sub !== 'review' && v.pause());
+    paintAll();
+  }
+  document.querySelectorAll('#hSeg button').forEach((b) => (b.onclick = () => setSub(b.dataset.sub)));
+
+  // ---------- state ----------
+  let hooks = [], remote = {}, edits = [], clips = {}, notes = {}, lastLoad = 0;
+  let pending = LS.get('hooks.pending', {});
+  let undoStack = LS.get('hooks.undo', []);
+  let events = LS.get('hooks.events', []);
+  let current = null, forceTop = null, sheetFor = null, status = { kind: '', text: '' };
+  let selected = new Set();
+  const savePending = () => LS.set('hooks.pending', pending);
+  const saveUndo = () => LS.set('hooks.undo', undoStack.slice(-50));
+  const saveEvents = () => LS.set('hooks.events', events.slice(-2000));
+  const logEvent = (hook_id, action, sw) => { events.push({ hook_id, action, decision: sw ? sw.decision : null, reasons: sw ? (sw.reasons || []) : null, note: sw ? (sw.note || '') : null, client_ts: new Date().toISOString() }); saveEvents(); };
+  const swipeOf = (id) => { const p = pending[id]; if (p) return p._delete ? null : p; return remote[id] || null; };
+  const effStatus = (h) => {
+    if (!['found', 'liked', 'disliked'].includes(h.status)) return h.status;
+    const sw = swipeOf(h.id); return !sw ? 'found' : sw.decision === 'dislike' ? 'disliked' : 'liked';
+  };
+  const deckList = () => hooks.filter((h) => effStatus(h) === 'found');
+  const readyList = () => hooks.filter((h) => effStatus(h) === 'liked');
+  const inEditing = () => hooks.filter((h) => ['submitted', 'editing', 'edited'].includes(h.status));
+  const toReview = () => edits.filter((e) => e.status === 'pending_review');
+  const hookById = (id) => hooks.find((h) => h.id === id) || null;
+
+  async function load() {
+    setStatus('busy', 'Loading'); lastLoad = Date.now();
+    try {
+      const [h, s, e, c, n] = await Promise.all([
+        sbGet('hooks?select=id,url,platform,creator,creator_nickname,creator_followers,stats,posted_at,added_at,duration_s,hook_text,hook_language,hook_text_en,hook_pattern,hook_template,caption,hashtags,frame_url,frame_description,why_picked,explore,status,status_changed_at,submitted_at&order=added_at.desc&limit=10000'),
+        sbGet('hook_swipes?select=*&limit=10000'),
+        sbGet('edits?select=id,hook_id,clip_id,adapted_hook_text,adapted_hook_text_en,language,caption,hashtags,video_url,thumbnail_url,duration_s,status,review_note,reviewed_at,target_platforms,routed_to,posted,editor_notes,created_at&order=created_at.desc&limit=500'),
+        sbGet('clips?select=id,title,description&limit=1000'),
+        sbGet('critic_notes?select=target_type,target_id,verdict,scores,note,rewrite,created_at&target_type=in.(hook,edit)&order=created_at.desc&limit=3000'),
+      ]);
+      hooks = h; remote = {}; s.forEach((x) => (remote[x.hook_id] = x)); edits = e;
+      clips = {}; c.forEach((x) => (clips[x.id] = x));
+      notes = {}; n.forEach((x) => { const k = x.target_type + ':' + x.target_id; (notes[k] = notes[k] || []).push(x); });
+      hooksLoaded = true;
+      render(true); paintAll();
+      if (Object.keys(pending).length || events.length) sync(); else updateStatus();
+    } catch (err) { setStatus('err', 'Load failed'); status.detail = err.message; render(true); paintAll(); }
+  }
+
+  // ---------- sync (same model as Inspo) ----------
+  let syncTimer = null, syncing = null;
+  const scheduleSync = (ms = 4000) => { clearTimeout(syncTimer); syncTimer = setTimeout(sync, ms); updateStatus(); };
+  function sync() { clearTimeout(syncTimer); if (!syncing) syncing = doSync().finally(() => (syncing = null)); return syncing; }
+  async function doSync() {
+    if (!Object.keys(pending).length && !events.length) return updateStatus();
+    setStatus('busy', 'Saving');
+    const snap = JSON.parse(JSON.stringify(pending)); const evSnap = events.slice();
+    let ok = true, err = '';
+    try {
+      const ups = Object.values(snap).filter((e) => !e._delete).map((e) => ({ hook_id: e.hook_id, decision: e.decision, reasons: e.reasons || [], note: e.note || '', swiped_at: e.swiped_at, updated_at: e.updated_at || null }));
+      const dels = Object.values(snap).filter((e) => e._delete).map((e) => e.hook_id);
+      if (ups.length) { const r = await sb('hook_swipes?on_conflict=hook_id', { method: 'POST', body: JSON.stringify(ups), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } }); if (!r.ok) { ok = false; err = `Supabase ${r.status} saving hook swipes`; } }
+      if (ok && dels.length) { const r = await sb(`hook_swipes?hook_id=in.(${dels.map((d) => '"' + String(d).replace(/"/g, '') + '"').join(',')})`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); if (!r.ok) { ok = false; err = `Supabase ${r.status} undoing hook swipes`; } }
+      if (ok) {
+        for (const [id, e] of Object.entries(snap)) {
+          if (e._delete) delete remote[id]; else remote[id] = e;
+          const h = hookById(id); if (h && ['found', 'liked', 'disliked'].includes(h.status)) h.status = e._delete ? 'found' : e.decision === 'dislike' ? 'disliked' : 'liked';
+          if (JSON.stringify(pending[id]) === JSON.stringify(e)) delete pending[id];
+        }
+        savePending();
+      }
+      if (ok && evSnap.length) { const r = await sb('hook_swipe_events', { method: 'POST', body: JSON.stringify(evSnap), headers: { Prefer: 'return=minimal' } }); if (r.ok) { events = events.slice(evSnap.length); saveEvents(); } else { ok = false; err = `Supabase ${r.status} saving history`; } }
+    } catch (e) { ok = false; err = e.message; }
+    if (ok) updateStatus(); else { setStatus('err', 'Not saved'); status.detail = err + ' — hook swipes are kept on this device and retried.'; }
+    return ok;
+  }
+  function setStatus(kind, text) { status = { kind, text }; paintStatus(); }
+  function updateStatus() { const n = Object.keys(pending).length; status = n ? { kind: 'busy', text: `${n} unsaved` } : { kind: 'ok', text: 'Saved' }; paintStatus(); }
+  function paintStatus() {
+    $('#hDot').className = 'dot ' + (status.kind || ''); $('#hStatusText').textContent = status.text || '';
+    const left = deckList().length; $('#hCount').textContent = sub === 'swipe' && left ? `${left} left` : '';
+    const r = readyList().length, v = toReview().length;
+    $('#readyN').textContent = r ? String(r) : ''; $('#reviewN').textContent = v ? String(v) : '';
+  }
+  $('#hStatus').onclick = () => toast(status.detail || status.text || '');
+  $('#hReloadBtn').onclick = () => load();
+
+  // ---------- swipe deck ----------
+  const critHtml = (k) => (notes[k] || []).slice(0, 2).map((c) => `<div class="critic"><span class="lbl">Hook Critic</span>${c.verdict ? `<b class="${esc(c.verdict)}">${esc(c.verdict)}</b> ` : ''}${c.scores && c.scores.avg != null ? `(${esc(c.scores.avg)}/10) ` : ''}${esc(c.note)}${c.rewrite ? `<div style="margin-top:4px">→ <i>${esc(c.rewrite)}</i></div>` : ''}</div>`).join('');
+  function cardHtml(h, live) {
+    const s = h.stats || {}; const url = safeUrl(h.url);
+    const stat = (icon, val) => (num(val) ? `<span>${icon} <b>${num(val)}</b></span>` : '');
+    const translated = h.hook_text_en && h.hook_text && h.hook_text_en.trim().toLowerCase() !== h.hook_text.trim().toLowerCase();
+    const vid = (String(h.url || '').match(/tiktok\.com\/.*\/video\/(\d+)/) || [])[1];
+    return `
+      <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div><div class="stamp super">SUPER</div>
+      <div class="media"><div class="hookart">${safeUrl(h.frame_url) ? `<img src="${esc(h.frame_url)}" alt="">` : ''}
+        <div class="htxt ${h.hook_text ? '' : 'unknown'}">${h.hook_text ? esc(h.hook_text) : 'Hook text not read yet'}</div>
+        ${live && vid ? `<button class="btn play" data-play="${esc(vid)}">▶ Play</button>` : ''}</div></div>
+      <div class="info">
+        <div class="meta">
+          <span class="badge">${esc(h.platform === 'instagram' ? 'Instagram' : h.platform === 'youtube' ? 'YouTube' : 'TikTok')}</span>
+          ${h.explore ? '<span class="badge explore">Experiment</span>' : ''}
+          ${h.creator ? `<b>@${esc(String(h.creator).replace(/^@/, ''))}</b>` : ''}
+          ${h.creator_followers ? `<span>${esc(num(h.creator_followers))} followers</span>` : ''}
+          ${h.posted_at ? `<span>· ${esc(ago(h.posted_at))}</span>` : ''}
+          ${url ? `<a class="open" href="${esc(url)}" target="_blank" rel="noopener">Open on TikTok ↗</a>` : ''}
+        </div>
+        <div class="stats">${stat('▶', s.views)}${stat('♥', s.likes)}${stat('💬', s.comments)}${stat('↗', s.shares)}${stat('🔖', s.saves)}</div>
+        ${translated ? `<div class="trans"><span class="lbl">English${h.hook_language ? ' · from ' + esc(LANG[h.hook_language] || h.hook_language) : ''}</span>${esc(h.hook_text_en)}</div>` : ''}
+        <div class="tags">${h.hook_pattern ? `<span class="tag">${esc(h.hook_pattern)}</span>` : ''}${h.hook_template ? `<span class="tag">“${esc(h.hook_template)}”</span>` : ''}</div>
+        ${h.frame_description ? `<div class="why">On screen: ${esc(h.frame_description)}</div>` : ''}
+        ${h.caption ? `<div class="caption">${esc(h.caption)}</div>` : ''}
+        ${(Array.isArray(h.hashtags) && h.hashtags.length) ? `<div class="tags hashes">${h.hashtags.map((t) => `<span class="tag hash">#${esc(String(t).replace(/^#/, ''))}</span>`).join('')}</div>` : ''}
+        ${critHtml('hook:' + h.id)}
+        ${h.why_picked ? `<div class="why">Why the scout picked it: ${esc(h.why_picked)}</div>` : ''}
+      </div>`;
+  }
+  function render(force) {
+    const stage = $('#hStage'); const list = deckList();
+    let top = (forceTop && list.find((h) => h.id === forceTop)) || list[0] || null; forceTop = null;
+    if (!force && current && top && current.id === top.id && stage.querySelector('.card:not(.behind)')) return paintStatus();
+    current = top; stage.innerHTML = '';
+    if (!top) {
+      const nothing = hooks.length === 0;
+      stage.innerHTML = `<div class="empty"><div><div style="font-size:42px">${nothing ? '🪝' : '✅'}</div>
+        <h2>${!hooksLoaded ? 'Loading hooks…' : nothing ? 'No hooks yet' : "You're all caught up"}</h2>
+        <div>${nothing ? 'The hook scout adds text-hook videos here. Liked ones go to “Ready to edit”.' : 'The hook scout will add more on its next run.'}</div>
+        <div style="margin-top:14px"><button class="btn primary" id="hCheck">Check for new</button></div></div></div>`;
+      $('#hCheck').onclick = load; return paintStatus();
+    }
+    const next = list.find((h) => h.id !== top.id);
+    if (next) { const b = document.createElement('div'); b.className = 'card behind'; b.innerHTML = cardHtml(next, false); stage.appendChild(b); }
+    const c = document.createElement('div'); c.className = 'card'; c.id = 'hCard'; c.innerHTML = cardHtml(top, true); stage.appendChild(c);
+    attachDrag(c);
+    const pb = c.querySelector('[data-play]');
+    if (pb) pb.onclick = () => { c.querySelector('.media').innerHTML = `<iframe src="https://www.tiktok.com/player/v1/${esc(pb.dataset.play)}?music_info=1&description=1&rel=0&autoplay=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`; };
+    const cap = c.querySelector('.caption');
+    if (cap && cap.scrollHeight > cap.clientHeight + 1) { cap.classList.add('collapsible'); cap.onclick = () => cap.classList.toggle('expanded'); }
+    paintStatus();
+  }
+  function attachDrag(card) {
+    let sx = 0, sy = 0, dx = 0, active = false, horiz = null, pid = null;
+    const st = { like: card.querySelector('.stamp.like'), nope: card.querySelector('.stamp.nope') };
+    const paint = () => { card.style.transform = `translate(${dx}px, 0) rotate(${dx / 18}deg)`; st.like.style.opacity = Math.max(0, Math.min(1, dx / 90)); st.nope.style.opacity = Math.max(0, Math.min(1, -dx / 90)); };
+    card.addEventListener('pointerdown', (e) => { if (e.target.closest('a, button, iframe') || (e.pointerType === 'mouse' && e.button !== 0)) return; active = true; horiz = null; sx = e.clientX; sy = e.clientY; dx = 0; pid = e.pointerId; card.classList.remove('anim'); });
+    card.addEventListener('pointermove', (e) => {
+      if (!active || e.pointerId !== pid) return; dx = e.clientX - sx; const dy = e.clientY - sy;
+      if (horiz === null && Math.hypot(dx, dy) > 8) { horiz = Math.abs(dx) > Math.abs(dy); if (horiz) { try { card.setPointerCapture(pid); } catch {} } else { active = false; return; } }
+      if (horiz) paint();
+    });
+    const end = () => { if (!active) return; active = false; if (horiz && Math.abs(dx) > 100) return decide(dx > 0 ? 'like' : 'dislike'); card.classList.add('anim'); dx = 0; paint(); };
+    card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
+  }
+  function flyOut(decision, done) {
+    const card = $('#hCard'); if (!card) return done();
+    const st = card.querySelector(decision === 'like' ? '.stamp.like' : decision === 'dislike' ? '.stamp.nope' : '.stamp.super'); if (st) st.style.opacity = 1;
+    card.classList.add('anim'); const w = window.innerWidth;
+    card.style.transform = decision === 'superlike' ? 'translateY(-120%) scale(.9)' : `translate(${decision === 'like' ? w : -w}px, 40px) rotate(${decision === 'like' ? 20 : -20}deg)`;
+    card.style.opacity = '0'; setTimeout(done, 260);
+  }
+  function decide(decision) {
+    if (!current) return; if (sheetFor) closeSheet();
+    const h = current; const entry = { hook_id: h.id, decision, reasons: [], note: '', swiped_at: new Date().toISOString() };
+    pending[h.id] = entry; savePending(); logEvent(h.id, 'swipe', entry); scheduleSync();
+    undoStack.push(h.id); saveUndo(); current = null;
+    flyOut(decision, () => { render(); openSheet(h.id, decision); });
+  }
+  function undo() {
+    const id = undoStack.pop(); if (!id) return toast('Nothing to undo');
+    const h = hookById(id);
+    if (h && !['found', 'liked', 'disliked'].includes(h.status)) { saveUndo(); return toast('Already submitted — move it back from “Ready to edit” first'); }
+    const was = swipeOf(id);
+    if (remote[id]) pending[id] = { hook_id: id, _delete: true }; else delete pending[id];
+    logEvent(id, 'undo', was); savePending(); saveUndo(); scheduleSync();
+    closeSheet(); forceTop = id; current = null; render(); paintAll();
+  }
+  function patchSwipe(id, patch) {
+    const base = swipeOf(id); if (!base) return;
+    pending[id] = { ...base, ...patch, updated_at: new Date().toISOString() };
+    savePending(); logEvent(id, 'edit', pending[id]); scheduleSync(5000);
+  }
+  let sheetTimer;
+  function openSheet(id, decision) {
+    sheetFor = id;
+    $('#hSheetTitle').textContent = decision === 'dislike' ? 'Why not?' : decision === 'superlike' ? 'Why the ★?' : 'Why ♥?';
+    const sw = swipeOf(id) || { reasons: [], note: '' };
+    $('#hChips').innerHTML = REASONS.map((r) => `<button class="chip ${sw.reasons?.includes(r) ? 'on' : ''}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
+    $('#hNote').value = sw.note || ''; $('#hSheet').classList.add('open'); armSheetTimer();
+  }
+  function armSheetTimer(ms = 8000) { clearTimeout(sheetTimer); sheetTimer = setTimeout(() => { if (document.activeElement !== $('#hNote')) closeSheet(); else armSheetTimer(); }, ms); }
+  function closeSheet() {
+    if (sheetFor) { const sw = swipeOf(sheetFor); const note = $('#hNote').value.trim(); if (sw && note !== (sw.note || '')) patchSwipe(sheetFor, { note }); }
+    clearTimeout(sheetTimer); sheetFor = null; $('#hNote').blur(); $('#hSheet').classList.remove('open'); paintAll();
+  }
+  $('#hChips').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip'); if (!b || !sheetFor) return; const sw = swipeOf(sheetFor); if (!sw) return;
+    const set = new Set(sw.reasons || []); const r = b.dataset.r; set.has(r) ? set.delete(r) : set.add(r);
+    b.classList.toggle('on', set.has(r)); patchSwipe(sheetFor, { reasons: [...set] }); armSheetTimer(10000);
+  });
+  $('#hNote').addEventListener('input', () => armSheetTimer(15000));
+  $('#hNote').addEventListener('keydown', (e) => { if (e.key === 'Enter') closeSheet(); e.stopPropagation(); });
+  $('#hSheetDone').onclick = closeSheet;
+  $('#hLikeBtn').onclick = () => decide('like'); $('#hNopeBtn').onclick = () => decide('dislike');
+  $('#hSuperBtn').onclick = () => decide('superlike'); $('#hUndoBtn').onclick = undo;
+  document.addEventListener('keydown', (e) => {
+    if (document.body.dataset.view !== 'hooks' || sub !== 'swipe' || document.querySelector('.modal.open') || e.target.matches('input, textarea')) return;
+    if (e.key === 'ArrowRight') decide('like'); else if (e.key === 'ArrowLeft') decide('dislike');
+    else if (e.key === 'ArrowUp') { e.preventDefault(); decide('superlike'); } else if (e.key.toLowerCase() === 'z') undo(); else if (e.key === 'Escape') closeSheet();
+  });
+
+  // ---------- ready to edit ----------
+  function itemHtml(h, withBox) {
+    const sw = swipeOf(h.id) || {}; const url = safeUrl(h.url);
+    return `<div class="litem">${withBox ? `<input type="checkbox" data-id="${esc(h.id)}" ${selected.has(h.id) ? 'checked' : ''}>` : ''}
+      <div class="body"><div class="top">${sw.decision === 'superlike' ? '<span>★</span>' : sw.decision ? '<span>♥</span>' : ''}${h.creator ? `<b>@${esc(String(h.creator).replace(/^@/, ''))}</b>` : ''}${num((h.stats || {}).views) ? `<span>▶ ${num(h.stats.views)}</span>` : ''}
+        ${!withBox ? `<span class="pillst">${esc(h.status)}</span>` : ''}${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</div>
+        <div class="htext">${esc(h.hook_text || '(hook text not read yet)')}</div>
+        ${h.hook_text_en && h.hook_text_en !== h.hook_text ? `<div class="sub2">${esc(h.hook_text_en)}</div>` : ''}
+        ${(sw.reasons || []).length || sw.note ? `<div class="tags" style="margin-top:6px">${(sw.reasons || []).map((r) => `<span class="tag">${esc(r)}</span>`).join('')}${sw.note ? `<span class="tag">“${esc(sw.note)}”</span>` : ''}</div>` : ''}
+        ${!withBox && h.status === 'submitted' ? `<button class="btn" data-unsubmit="${esc(h.id)}" style="margin:8px 0 0;padding:5px 10px;font-size:13px">Move back</button>` : ''}
+      </div></div>`;
+  }
+  function paintReady() {
+    const r = readyList(); const ids = new Set(r.map((h) => h.id)); selected = new Set([...selected].filter((x) => ids.has(x)));
+    const ed = inEditing();
+    $('#readyList').innerHTML = (r.length ? r.map((h) => itemHtml(h, true)).join('')
+      : `<div class="hempty"><div style="font-size:36px">📝</div><h2>Nothing ready yet</h2><div>Hooks you ♥ or ★ in Swipe land here. Tick the ones you want and submit them to the editing agent.</div></div>`)
+      + (ed.length ? `<div class="sect">With the editor (${ed.length})</div>` + ed.map((h) => itemHtml(h, false)).join('') : '');
+    $('#readyAll').checked = r.length > 0 && selected.size === r.length;
+    $('#submitBtn').disabled = selected.size === 0;
+    $('#submitBtn').textContent = selected.size ? `Submit ${selected.size} for editing` : 'Submit for editing';
+  }
+  $('#readyList').addEventListener('change', (e) => { const b = e.target.closest('input[type=checkbox][data-id]'); if (!b) return; b.checked ? selected.add(b.dataset.id) : selected.delete(b.dataset.id); paintReady(); });
+  $('#readyList').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-unsubmit]'); if (!b) return; b.disabled = true;
+    try { await rpc('app_unsubmit_hooks', { p_ids: [b.dataset.unsubmit] }); const h = hookById(b.dataset.unsubmit); if (h) h.status = 'liked'; toast('Moved back to Ready to edit'); }
+    catch (err) { toast('✕ ' + err.message); }
+    paintAll();
+  });
+  $('#readyAll').onchange = (e) => { selected = e.target.checked ? new Set(readyList().map((h) => h.id)) : new Set(); paintReady(); };
+  $('#submitBtn').onclick = async () => {
+    const ids = [...selected]; if (!ids.length) return;
+    const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      if (Object.keys(pending).length && !(await sync())) throw new Error('Swipes not saved yet — check your connection');
+      const n = await rpc('app_submit_hooks', { p_ids: ids });
+      ids.forEach((id) => { const h = hookById(id); if (h && effStatus(h) === 'liked') { h.status = 'submitted'; h.submitted_at = new Date().toISOString(); } });
+      selected = new Set(); toast(`✓ ${n} hook${n === 1 ? '' : 's'} sent to the editing agent`);
+    } catch (err) { toast('✕ ' + err.message); }
+    paintAll();
+  };
+
+  // ---------- review edits ----------
+  function editHtml(e, reviewable) {
+    const h = hookById(e.hook_id) || {}; const clip = clips[e.clip_id] || null; const v = safeUrl(e.video_url);
+    const plats = Array.isArray(e.target_platforms) && e.target_platforms.length ? e.target_platforms : ['tiktok', 'instagram'];
+    return `<div class="edit" data-edit="${esc(e.id)}">
+      ${v ? `<video src="${esc(v)}" ${safeUrl(e.thumbnail_url) ? `poster="${esc(e.thumbnail_url)}"` : ''} controls playsinline loop preload="metadata"></video>` : '<div class="novid">No rendered video attached yet</div>'}
+      <div class="pad">
+        <div class="meta">${!reviewable ? `<span class="pillst ${esc(e.status)}">${esc(e.status)}</span>` : ''}<span>${esc(LANG[e.language] || e.language || '')}</span><span>· ${esc(ago(e.created_at))}</span>${safeUrl(h.url) ? `<a class="open" href="${esc(h.url)}" target="_blank" rel="noopener">Original ↗</a>` : ''}</div>
+        <div class="hook" style="font-size:18px">${esc(e.adapted_hook_text)}</div>
+        ${e.adapted_hook_text_en && e.adapted_hook_text_en !== e.adapted_hook_text ? `<div class="trans"><span class="lbl">English</span>${esc(e.adapted_hook_text_en)}</div>` : ''}
+        ${h.hook_text ? `<div class="why">Original hook: “${esc(h.hook_text)}”${h.hook_text_en && h.hook_text_en !== h.hook_text ? ` — ${esc(h.hook_text_en)}` : ''}</div>` : ''}
+        ${clip ? `<div class="why">Clip: <b>${esc(clip.title)}</b> — ${esc(clip.description)}</div>` : ''}
+        ${e.caption ? `<div class="caption expanded" style="margin-top:6px">${esc(e.caption)}</div>` : ''}
+        ${e.editor_notes ? `<div class="why">Editor: ${esc(e.editor_notes)}</div>` : ''}
+        ${critHtml('edit:' + e.id)}
+        ${reviewable ? `
+          <div class="plats">${['tiktok', 'instagram'].map((p) => `<label><input type="checkbox" data-plat="${p}" ${plats.includes(p) ? 'checked' : ''}> ${esc(ROUTE[p])}</label>`).join('')}</div>
+          <input class="note" data-note placeholder="Note (why reject / what to fix)" autocomplete="off">
+          <div class="row" style="margin-top:10px"><button class="btn ok" data-approve>✓ Approve</button><button class="btn bad" data-reject>✕ Reject</button></div>`
+        : `${e.review_note ? `<div class="why">Your note: “${esc(e.review_note)}”</div>` : ''}${e.status === 'approved' ? `<div class="why">Routed: ${Object.entries(e.routed_to || {}).map(([p, a]) => esc(p + ' → ' + a.replace(/_/g, ' '))).join(', ')}</div>` : ''}`}
+      </div></div>`;
+  }
+  function paintReview() {
+    const pend = toReview(); const done = edits.filter((e) => e.status !== 'pending_review').slice(0, 10);
+    const playing = [...document.querySelectorAll('#reviewList video')].some((v) => !v.paused);
+    if (playing) return; // don't interrupt playback
+    $('#reviewList').innerHTML = (pend.length ? pend.map((e) => editHtml(e, true)).join('')
+      : `<div class="hempty"><div style="font-size:36px">🎬</div><h2>No edits to review</h2><div>When the editing agent finishes a video it shows up here. Approve sends it to Edits Chef (TikTok) and Trial reels AGNT (Instagram trial reel).</div></div>`)
+      + (done.length ? `<div class="sect">Recently reviewed</div>` + done.map((e) => editHtml(e, false)).join('') : '');
+  }
+  $('#reviewList').addEventListener('click', async (ev) => {
+    const ap = ev.target.closest('[data-approve]'), rj = ev.target.closest('[data-reject]'); if (!ap && !rj) return;
+    const card = ev.target.closest('[data-edit]'); const id = card.dataset.edit;
+    const note = card.querySelector('[data-note]').value.trim();
+    const plats = [...card.querySelectorAll('[data-plat]')].filter((x) => x.checked).map((x) => x.dataset.plat);
+    if (ap && !plats.length) return toast('Pick at least one platform');
+    if (rj && !note && !confirm('Reject without a note? A short reason helps the editor fix it.')) return;
+    card.querySelectorAll('button').forEach((b) => (b.disabled = true));
+    try {
+      const row = await rpc('app_review_edit', { p_edit_id: id, p_decision: ap ? 'approve' : 'reject', p_note: note, p_platforms: ap ? plats : null });
+      const i = edits.findIndex((x) => x.id === id); if (i >= 0) edits[i] = { ...edits[i], ...row };
+      const h = hookById(row.hook_id); if (h) h.status = ap ? 'approved' : (edits.some((x) => x.hook_id === row.hook_id && x.status === 'pending_review') ? h.status : 'rejected');
+      card.querySelectorAll('video').forEach((v) => v.pause());
+      toast(ap ? '✓ Approved — ' + plats.map((p) => (p === 'tiktok' ? 'Edits Chef' : 'Trial reels AGNT')).join(' + ') : 'Rejected — the editor will see your note');
+    } catch (err) { toast('✕ ' + err.message); card.querySelectorAll('button').forEach((b) => (b.disabled = false)); return; }
+    paintAll();
+  });
+
+  function paintAll() { paintStatus(); if (sub === 'ready') paintReady(); if (sub === 'review') paintReview(); }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { closeSheet(); sync(); }
+    else if (document.body.dataset.view === 'hooks' && Date.now() - lastLoad > 120000) load();
+  });
+  window.addEventListener('online', () => sync());
+  if (Object.keys(pending).length || events.length) setTimeout(sync, 1500);
+
+  setSub(sub);
+  const start = location.hash === '#hooks' ? 'hooks' : location.hash === '#inspo' ? 'inspo' : LS.get('app.view', 'inspo');
+  setView(start);
 })();
 </script>
 </body>
