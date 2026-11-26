@@ -452,8 +452,11 @@
     "video_id": "tiktok_7666529175947234574",
     "url": "https://www.tiktok.com/@2bae1gallbladder/video/7666529175947234574",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:36:14.932Z"
+    "reasons": [
+      "Topic"
+    ],
+    "note": "It's more about having fun with the music, they made it without hearing each other, firstly there were more creators than just one and secondly it's not about promoting music but making something funny",
+    "swiped_at": "2026-11-26T18:36:14.932Z",
+    "updated_at": "2026-11-26T18:36:42.791Z"
   }
 ]
