@@ -525,8 +525,12 @@
     "video_id": "tiktok_7707980688091319583",
     "url": "https://www.tiktok.com/@carmenni596635/video/7707980688091319583",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:46:47.720Z"
+    "reasons": [
+      "Format",
+      "Topic"
+    ],
+    "note": "It just trend to certain white music song, it won't go viral with any other song and in my country",
+    "swiped_at": "2026-11-26T18:46:47.720Z",
+    "updated_at": "2026-11-26T18:47:01.141Z"
   }
 ]
