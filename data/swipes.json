@@ -373,8 +373,12 @@
     "video_id": "tiktok_7691521809090399508",
     "url": "https://www.tiktok.com/@exhi.beat/video/7691521809090399508",
     "decision": "superlike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T17:27:31.370Z"
+    "reasons": [
+      "Hook",
+      "Format"
+    ],
+    "note": "Yea, this one is gold, repetable, cool and easy to record",
+    "swiped_at": "2026-11-26T17:27:31.370Z",
+    "updated_at": "2026-11-26T17:27:47.550Z"
   }
 ]
