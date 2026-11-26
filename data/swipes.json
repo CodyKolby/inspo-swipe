@@ -419,8 +419,19 @@
     "video_id": "tiktok_7701874304702598431",
     "url": "https://www.tiktok.com/@teslakaraoke/video/7701874304702598431",
     "decision": "dislike",
+    "reasons": [
+      "Topic"
+    ],
+    "note": "It's more about the vibe rather than promoting music, the biggest advantage of this video was their reactions, it wouldn't work with my music",
+    "swiped_at": "2026-11-26T18:33:45.057Z",
+    "updated_at": "2026-11-26T18:34:14.995Z"
+  },
+  {
+    "video_id": "tiktok_7657745169084665110",
+    "url": "https://www.tiktok.com/@twitchrealtempsz_/video/7657745169084665110",
+    "decision": "dislike",
     "reasons": [],
     "note": "",
-    "swiped_at": "2026-11-26T18:33:45.057Z"
+    "swiped_at": "2026-11-26T18:34:19.653Z"
   }
 ]
