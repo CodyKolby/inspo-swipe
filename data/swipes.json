@@ -572,8 +572,12 @@
     "video_id": "tiktok_7654730206929833230",
     "url": "https://www.tiktok.com/@its_maryclairegillis/video/7654730206929833230",
     "decision": "like",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:48:28.020Z"
+    "reasons": [
+      "Easy to film",
+      "Hook"
+    ],
+    "note": "Good reaction video, simple to film, good hook, the most important here is their reaction",
+    "swiped_at": "2026-11-26T18:48:28.020Z",
+    "updated_at": "2026-11-26T18:48:45.389Z"
   }
 ]
