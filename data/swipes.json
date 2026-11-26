@@ -497,7 +497,17 @@
     "url": "https://www.tiktok.com/@9to5.guitarist/video/7672858744056745230",
     "decision": "dislike",
     "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:45:33.178Z"
+    "note": "It's just cover of popular song, it won't go viral with my song + I can't play my song on an instrument",
+    "swiped_at": "2026-11-26T18:45:33.178Z",
+    "updated_at": "2026-11-26T18:45:45.623Z"
+  },
+  {
+    "video_id": "tiktok_7655125131823418637",
+    "url": "https://www.tiktok.com/@9to5.guitarist/video/7655125131823418637",
+    "decision": "dislike",
+    "reasons": [],
+    "note": "It's just cover of popular song, it won't go viral with my song + I can't play my song on an instrument",
+    "swiped_at": "2026-11-26T18:45:48.761Z",
+    "updated_at": "2026-11-26T18:45:50.427Z"
   }
 ]
