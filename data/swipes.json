@@ -561,8 +561,11 @@
     "video_id": "tiktok_7708401160083836191",
     "url": "https://www.tiktok.com/@gracemillermoody.music/video/7708401160083836191",
     "decision": "like",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:47:57.811Z"
+    "reasons": [
+      "Hook"
+    ],
+    "note": "Really good hook and idea, will test it",
+    "swiped_at": "2026-11-26T18:47:57.811Z",
+    "updated_at": "2026-11-26T18:48:07.234Z"
   }
 ]
