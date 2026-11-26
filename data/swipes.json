@@ -476,8 +476,11 @@
     "video_id": "tiktok_7684390908212694286",
     "url": "https://www.tiktok.com/@wearenewunit/video/7684390908212694286",
     "decision": "like",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:42:54.400Z"
+    "reasons": [
+      "Format"
+    ],
+    "note": "This one is good as well, the only problem is you need lot of people to record it and it takes long time",
+    "swiped_at": "2026-11-26T18:42:54.400Z",
+    "updated_at": "2026-11-26T18:43:09.646Z"
   }
 ]
