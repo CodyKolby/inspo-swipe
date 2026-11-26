@@ -168,15 +168,10 @@
 <div class="modal" id="settings">
   <div class="box">
     <h2>Settings<span class="spacer"></span><button class="icon-btn" data-close>✕</button></h2>
-    <label>GitHub owner</label><input id="cfgOwner" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <label>Repo</label><input id="cfgRepo" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <label>Branch</label><input id="cfgBranch" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <label>Personal access token</label><input id="cfgToken" type="password" autocomplete="off" placeholder="github_pat_…">
-    <div class="help">Fine-grained token → only this repo → <b>Contents: Read and write</b>. It stays in this browser only and is used to save your swipes to <code>data/swipes.json</code>.</div>
+    <div class="help" style="margin-top:0">Videos and swipes are stored in Supabase (project <b>inspo-scout</b>). Every swipe, edit and undo is saved there automatically — no token needed. Swipes made offline stay on this device and are retried.</div>
     <div class="row">
-      <button class="btn primary" id="cfgSave">Save</button>
-      <button class="btn" id="cfgTest">Test connection</button>
-      <button class="btn" id="cfgClear">Remove token</button>
+      <button class="btn primary" id="cfgTest">Test connection</button>
+      <button class="btn" id="cfgReload">Reload videos</button>
     </div>
     <div class="help" id="cfgResult"></div>
   </div>
@@ -221,25 +216,28 @@
   ];
 
   // ---------- config & state ----------
-  const detect = () => {
-    const h = location.hostname;
-    if (!h.endsWith('.github.io')) return {};
-    const seg = location.pathname.split('/').filter(Boolean)[0];
-    return { owner: h.split('.')[0], repo: seg || h };
-  };
-  let cfg = Object.assign({ branch: 'main' }, detect(), LS.get('inspo.cfg', {}));
-  const hasToken = () => !!(cfg.token && cfg.owner && cfg.repo);
+  // Supabase project "inspo-scout". The publishable key is meant to be public; Row Level Security allows it to
+  // read videos, read/write swipes and append swipe_events only.
+  const SB_URL = 'https://nzefxnfkzybyhillndhz.supabase.co';
+  const SB_KEY = 'sb_publishable_IQrtX4qrePB1NDnAU73xyQ_KHzvCwM6';
+  const VIDEO_COLS = 'id,url,platform,creator,creator_nickname,creator_followers,creator_bio,stats,posted_at,added_at,duration_s,caption,hashtags,sound,hook,format,tags,promo_idea,why_picked,explore';
 
-  let videos = [];               // from data/videos.json
-  let remote = {};               // video_id -> swipe (data/swipes.json)
+  let videos = [];               // from Supabase videos
+  let remote = {};               // video_id -> swipe (Supabase swipes)
   let pending = LS.get('inspo.pending', {}); // video_id -> swipe not yet committed (or {_delete:true})
   let undoStack = LS.get('inspo.undo', []);
+  let events = LS.get('inspo.events', []);   // swipe_events rows not yet sent (append-only history)
   let demo = false, demoSwipes = {};
   let current = null, forceTop = null, sheetFor = null, lastLoad = 0;
   let status = { kind: '', text: '' };
 
   const savePending = () => LS.set('inspo.pending', pending);
   const saveUndo = () => LS.set('inspo.undo', undoStack.slice(-50));
+  const saveEvents = () => LS.set('inspo.events', events.slice(-2000));
+  const logEvent = (video_id, action, sw) => {
+    events.push({ video_id, action, decision: sw ? sw.decision : null, reasons: sw ? (sw.reasons || []) : null, note: sw ? (sw.note || '') : null, client_ts: new Date().toISOString() });
+    saveEvents();
+  };
   const swipeOf = (id) => {
     if (demo) return demoSwipes[id] || null;
     const p = pending[id];
@@ -254,42 +252,18 @@
   };
   const deckList = () => videos.filter((v) => !swipeOf(v.id));
 
-  // ---------- GitHub API ----------
-  const b64enc = (str) => {
-    const bytes = new TextEncoder().encode(str); let bin = '';
-    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-    return btoa(bin);
-  };
-  const b64dec = (b64) => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, '')), (c) => c.charCodeAt(0)));
-  const api = (path, opts = {}) => fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}${path}`, {
+  // ---------- Supabase REST ----------
+  const sb = (path, opts = {}) => fetch(`${SB_URL}/rest/v1/${path}`, {
     ...opts, cache: 'no-store',
-    headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${cfg.token}`, 'X-GitHub-Api-Version': '2022-11-28', ...(opts.headers || {}) },
+    headers: { apikey: SB_KEY, 'Content-Type': 'application/json', ...(opts.headers || {}) },
   });
-  const ref = () => `?ref=${encodeURIComponent(cfg.branch || 'main')}`;
-  async function ghRead(file) {
-    const r = await api(`/contents/${file}${ref()}`);
-    if (r.status === 404) return { data: null, sha: null };
-    if (!r.ok) throw new Error(`GitHub ${r.status} reading ${file}`);
-    const j = await r.json();
-    let text;
-    if (j.encoding === 'base64') text = j.content ? b64dec(j.content) : '';
-    else { // files > 1 MB come without content
-      const rr = await api(`/contents/${file}${ref()}`, { headers: { Accept: 'application/vnd.github.raw+json' } });
-      if (!rr.ok) throw new Error(`GitHub ${rr.status} reading ${file}`);
-      text = await rr.text();
-    }
-    return { data: text.trim() ? JSON.parse(text) : null, sha: j.sha };
+  async function sbGet(path) {
+    const r = await sb(path);
+    if (!r.ok) throw new Error(`Supabase ${r.status} reading ${path.split('?')[0]}`);
+    return r.json();
   }
-  function ghWrite(file, data, sha, message) {
-    const body = { message, content: b64enc(JSON.stringify(data, null, 2) + '\n'), branch: cfg.branch || 'main' };
-    if (sha) body.sha = sha;
-    return api(`/contents/${file}`, { method: 'PUT', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
-  }
-  async function fetchStatic(file) {
-    const r = await fetch(`${file}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!r.ok) throw new Error(`${r.status} loading ${file}`);
-    const t = await r.text(); return t.trim() ? JSON.parse(t) : null;
-  }
+  const SWIPE_COLS = ['video_id', 'decision', 'reasons', 'note', 'swiped_at', 'updated_at'];
+  const swipeRow = (e) => { const o = {}; SWIPE_COLS.forEach((k) => (o[k] = e[k] ?? (k === 'reasons' ? [] : k === 'note' ? '' : null))); return o; };
 
   // ---------- data ----------
   const normVideos = (data) => {
@@ -307,15 +281,13 @@
     setStatus('busy', 'Loading');
     lastLoad = Date.now();
     try {
-      if (hasToken()) {
-        const [v, s] = await Promise.all([ghRead('data/videos.json'), ghRead('data/swipes.json')]);
-        videos = normVideos(v.data); setRemote(s.data);
-      } else {
-        videos = normVideos(await fetchStatic('data/videos.json'));
-        setRemote(await fetchStatic('data/swipes.json').catch(() => []));
-      }
+      const [v, s] = await Promise.all([
+        sbGet(`videos?select=${VIDEO_COLS}&order=added_at.desc&limit=10000`),
+        sbGet('swipes?select=*&limit=10000'),
+      ]);
+      videos = normVideos(v); setRemote(s);
       render();
-      if (Object.keys(pending).length) sync(); else updateStatus();
+      if (Object.keys(pending).length || events.length) sync(); else updateStatus();
     } catch (e) {
       setStatus('err', 'Load failed');
       status.detail = e.message;
@@ -328,33 +300,36 @@
   const scheduleSync = (ms = 4000) => { clearTimeout(syncTimer); syncTimer = setTimeout(sync, ms); updateStatus(); };
   async function sync() {
     clearTimeout(syncTimer);
-    if (demo || !hasToken() || !Object.keys(pending).length) return updateStatus();
+    if (demo || (!Object.keys(pending).length && !events.length)) return updateStatus();
     if (syncing) { syncAgain = true; return; }
     syncing = true; setStatus('busy', 'Saving');
     const snap = JSON.parse(JSON.stringify(pending));
-    let ok = false, err = '';
+    const evSnap = events.slice();
+    let ok = true, err = '';
     try {
-      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-        const { data, sha } = await ghRead('data/swipes.json');
-        const map = {};
-        (Array.isArray(data) ? data : []).forEach((s) => s && s.video_id && (map[s.video_id] = s));
-        const n = { like: 0, superlike: 0, dislike: 0 };
-        for (const [id, e] of Object.entries(snap)) {
-          if (e._delete) delete map[id]; else { map[id] = e; n[e.decision] = (n[e.decision] || 0) + 1; }
-        }
-        const arr = Object.values(map).sort((a, b) => String(a.swiped_at).localeCompare(String(b.swiped_at)));
-        const msg = `swipes: ♥${n.like} ★${n.superlike} ✕${n.dislike}`;
-        const r = await ghWrite('data/swipes.json', arr, sha, msg);
-        if (r.ok) {
-          ok = true; remote = map;
-          for (const [id, e] of Object.entries(snap)) if (JSON.stringify(pending[id]) === JSON.stringify(e)) delete pending[id];
-          savePending();
-        } else if (r.status !== 409 && r.status !== 422) {
-          err = `GitHub ${r.status}` + (r.status === 401 || r.status === 403 ? ' — check token' : '');
-          break;
-        } else err = `GitHub ${r.status} (conflict)`;
+      const ups = Object.values(snap).filter((e) => !e._delete).map(swipeRow);
+      const dels = Object.values(snap).filter((e) => e._delete).map((e) => e.video_id);
+      if (ups.length) {
+        const r = await sb('swipes?on_conflict=video_id', { method: 'POST', body: JSON.stringify(ups), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
+        if (!r.ok) { ok = false; err = `Supabase ${r.status} saving swipes`; }
       }
-    } catch (e) { err = e.message; }
+      if (ok && dels.length) {
+        const r = await sb(`swipes?video_id=in.(${dels.map((d) => '"' + String(d).replace(/"/g, '') + '"').join(',')})`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+        if (!r.ok) { ok = false; err = `Supabase ${r.status} undoing swipes`; }
+      }
+      if (ok) {
+        for (const [id, e] of Object.entries(snap)) {
+          if (e._delete) delete remote[id]; else remote[id] = e;
+          if (JSON.stringify(pending[id]) === JSON.stringify(e)) delete pending[id];
+        }
+        savePending();
+      }
+      if (ok && evSnap.length) {
+        const r = await sb('swipe_events', { method: 'POST', body: JSON.stringify(evSnap), headers: { Prefer: 'return=minimal' } });
+        if (r.ok) { events = events.slice(evSnap.length); saveEvents(); }
+        else { ok = false; err = `Supabase ${r.status} saving history`; }
+      }
+    } catch (e) { ok = false; err = e.message; }
     syncing = false;
     if (ok) updateStatus(); else { setStatus('err', 'Not saved'); status.detail = err + ' — swipes are kept on this device and retried.'; }
     if (syncAgain) { syncAgain = false; scheduleSync(500); }
@@ -364,7 +339,6 @@
   function updateStatus() {
     const n = Object.keys(pending).length;
     if (demo) status = { kind: '', text: 'Demo' };
-    else if (!hasToken()) status = { kind: n ? 'err' : '', text: n ? `${n} not saved` : 'Read-only', detail: 'Add a GitHub token in Settings to save swipes.' };
     else if (n) status = { kind: 'busy', text: `${n} unsaved` };
     else status = { kind: 'ok', text: 'Saved' };
     paintStatus();
@@ -443,7 +417,7 @@
       stage.innerHTML = `<div class="empty"><div>
         <div style="font-size:42px">${nothing ? '📭' : '✅'}</div>
         <h2>${nothing ? 'No videos yet' : "You're all caught up"}</h2>
-        <div>${demo ? 'That was the demo.' : nothing ? 'Grok adds finds to data/videos.json on its schedule.' : 'Grok will send more on its next run.'}</div>
+        <div>${demo ? 'That was the demo.' : nothing ? 'Grok adds finds on its schedule.' : 'Grok will send more on its next run.'}</div>
         <div style="margin-top:14px">
           ${demo ? '<button class="btn primary" id="exitDemo">Exit demo</button>' : '<button class="btn primary" id="reload">Check for new</button>'}
           ${!demo ? '<button class="btn" id="tryDemo">Try demo cards</button>' : ''}
@@ -524,7 +498,7 @@
     const v = current;
     const entry = { video_id: v.id, url: v.url || null, decision, reasons: [], note: '', swiped_at: new Date().toISOString() };
     if (demo) demoSwipes[v.id] = entry;
-    else { pending[v.id] = entry; savePending(); scheduleSync(); }
+    else { pending[v.id] = entry; savePending(); logEvent(v.id, 'swipe', entry); scheduleSync(); }
     undoStack.push(v.id); if (!demo) saveUndo();
     current = null;
     flyOut(decision, () => { render(); openSheet(v.id, decision); });
@@ -535,7 +509,9 @@
     if (!id) return toast('Nothing to undo');
     if (demo) delete demoSwipes[id];
     else {
+      const was = swipeOf(id);
       if (remote[id]) pending[id] = { video_id: id, _delete: true }; else delete pending[id];
+      logEvent(id, 'undo', was);
       savePending(); saveUndo(); scheduleSync();
     }
     closeSheet(); forceTop = id; current = null; render();
@@ -545,7 +521,7 @@
     if (demo) { if (demoSwipes[id]) Object.assign(demoSwipes[id], patch); return; }
     const base = swipeOf(id); if (!base) return;
     pending[id] = { ...base, ...patch, updated_at: new Date().toISOString() };
-    savePending(); scheduleSync(5000);
+    savePending(); logEvent(id, 'edit', pending[id]); scheduleSync(5000);
   }
 
   // ---------- reason sheet ----------
@@ -604,22 +580,14 @@
     if (e.target === m || e.target.closest('[data-close]')) m.classList.remove('open');
   }));
 
-  $('#settingsBtn').onclick = () => {
-    $('#cfgOwner').value = cfg.owner || ''; $('#cfgRepo').value = cfg.repo || '';
-    $('#cfgBranch').value = cfg.branch || 'main'; $('#cfgToken').value = cfg.token || '';
-    $('#cfgResult').textContent = ''; openModal('#settings');
-  };
-  const readForm = () => ({ owner: $('#cfgOwner').value.trim(), repo: $('#cfgRepo').value.trim(), branch: $('#cfgBranch').value.trim() || 'main', token: $('#cfgToken').value.trim() });
-  $('#cfgSave').onclick = () => { cfg = readForm(); LS.set('inspo.cfg', cfg); $('#settings').classList.remove('open'); toast('Saved'); load(); };
-  $('#cfgClear').onclick = () => { $('#cfgToken').value = ''; cfg = { ...readForm(), token: '' }; LS.set('inspo.cfg', cfg); $('#cfgResult').textContent = 'Token removed from this browser.'; updateStatus(); };
+  $('#settingsBtn').onclick = () => { $('#cfgResult').textContent = ''; openModal('#settings'); };
+  $('#cfgReload').onclick = () => { $('#settings').classList.remove('open'); load(); };
   $('#cfgTest').onclick = async () => {
-    const old = cfg; cfg = readForm(); const out = $('#cfgResult'); out.textContent = 'Testing…';
+    const out = $('#cfgResult'); out.textContent = 'Testing…';
     try {
-      const r = await api('');
-      if (!r.ok) out.textContent = `✕ GitHub ${r.status}. Check owner, repo and token.`;
-      else { const j = await r.json(); out.textContent = j.permissions?.push ? '✓ Connected — can read and write.' : '⚠ Connected, but the token cannot write. Give it Contents: Read and write.'; }
+      const r = await sb('videos?select=id&limit=1');
+      out.textContent = r.ok ? `✓ Connected to Supabase — ${videos.length} videos, ${allSwipes().length} swipes.` : `✕ Supabase ${r.status}.`;
     } catch (e) { out.textContent = '✕ ' + e.message; }
-    cfg = old;
   };
 
   let savedFilter = 'superlike';

@@ -1,78 +1,48 @@
-# Grok ↔ Inspo Swipe contract
+# Grok ↔ Inspo Swipe contract (Supabase)
 
-Dominik swipes on the videos you find. Your job: add finds to `data/videos.json`, read his swipes from `data/swipes.json`, and get closer to his taste every run.
+Dominik swipes on the videos you find. Your job: add finds to the Supabase `videos` table, read his swipes from `swipes` / `swipe_events`, describe videos with Gemini, and get closer to his taste every run.
 
-Repo: `https://github.com/CodyKolby/inspo-swipe` · branch `main`
+- App: `https://codykolby.github.io/inspo-swipe/` (repo `CodyKolby/inspo-swipe`, branch `main`). Reads videos and reads/writes swipes straight from Supabase.
+- Database: Supabase project **inspo-scout** (`nzefxnfkzybyhillndhz`, eu-central-1, free plan). REST: `https://nzefxnfkzybyhillndhz.supabase.co/rest/v1/`.
+- `data/videos.json` and `data/swipes.json` are a **frozen backup** from 2026-11-26. Nothing writes to them any more; don't use them as the source of truth.
+- **No video files are stored anywhere in Supabase.** Only the TikTok URL plus metadata and the Gemini description.
 
-## 1. Add videos → `data/videos.json`
+## Tables
 
-A JSON array. **Append only**: never delete, reorder or edit existing entries, never reuse an `id`, skip any video whose `id` or `url` is already in the file.
-
-```json
-{
-  "id": "tiktok_7312345678901234567",
-  "url": "https://www.tiktok.com/@creator/video/7312345678901234567",
-  "platform": "tiktok",
-  "creator": "creator",
-  "creator_followers": 12000,
-  "stats": { "views": 1840000, "likes": 210000, "comments": 3100, "shares": 18000, "saves": 9000 },
-  "posted_at": "2026-11-20T18:00:00Z",
-  "added_at": "2026-11-25T21:00:00Z",
-  "hook": "What is said or shown in the first 2 seconds",
-  "format": "Short label, e.g. Street reaction",
-  "tags": ["music", "pov"],
-  "promo_idea": "How Dominik could use this format to promote his music",
-  "why_picked": "Which of his past swipes this is based on",
-  "explore": false,
-  "caption": "Full post description text",
-  "hashtags": ["karaoke", "carkaraoke"],
-  "sound": { "title": "original sound - creator", "author": "Display name", "is_original": true },
-  "creator_bio": "The creator's TikTok bio/signature",
-  "creator_nickname": "Display name"
-}
-```
-
-| Field | Required | Notes |
+| Table | What | Who writes |
 |---|---|---|
-| `id` | yes | `platform_nativeId`, unique |
-| `url` | yes | Full canonical URL. No short links (`vm.tiktok.com`), or the in-app player can't embed it |
-| `platform` | yes | `tiktok`, `instagram`, `youtube` or `x` |
-| `added_at` | yes | ISO 8601 UTC, used to show newest finds first |
-| `hook`, `format`, `promo_idea` | yes | Shown on the card |
-| `why_picked` | recommended | Shown on the card, lets Dominik see your reasoning |
-| `explore` | optional | `true` for deliberate experiments outside his proven taste. Aim for ~20% of each batch |
-| `caption`, `hashtags`, `sound`, `creator_bio`, `creator_nickname` | recommended | Include on every new video. `hashtags` are names without `#`, from `text_extra` / `cha_list` or parsed from the caption. `sound` is `{title, author, is_original}` (`is_original` = TikTok's original-sound flag). Use `null` when a value is missing; never invent. |
-| everything else | optional | |
+| `videos` | One row per find. `id` = `platform_nativeId` (e.g. `tiktok_7312…`). Columns: `url, platform, creator, creator_nickname, creator_followers, creator_bio, stats jsonb, posted_at, added_at, duration_s, caption, hashtags text[], sound jsonb, hook, format, tags text[], promo_idea, why_picked, explore, transcript, description jsonb, description_model, description_cost_usd, described_at, raw jsonb` | Grok (pipeline) |
+| `swipes` | Current state per video: `video_id pk, decision (like/superlike/dislike), reasons text[], note, swiped_at, updated_at`. A row disappears when he undoes a swipe. | The app |
+| `swipe_events` | Append-only history of every `swipe`, `edit`, `undo` (plus `migrate` rows from the JSON backup): `video_id, action, decision, reasons, note, client_ts, created_at` | The app |
+| `searches` | Every ScrapeCreators search: `query, kind, sort, page, credits, results_count, kept_count, ran_at, raw` | Grok |
+| `creators` | `handle pk, nickname, followers, bio, notes, last_checked` | Grok |
+| `taste_notes` | Running taste summary: `created_at, body` | Grok |
 
-How to write (GitHub contents API):
+Field rules for new `videos` rows (same as before): `id`, `url` (canonical, no short links), `platform`, `added_at` required; `hook`, `format`, `promo_idea` shown on the card; `why_picked` recommended; `explore: true` for ~20% experiments; `caption`, `hashtags` (no `#`), `sound {title, author, is_original}`, `creator_bio`, `creator_nickname` on every new video. Use `null` when a value is missing; never invent. Never reuse an `id`.
 
-1. `GET https://api.github.com/repos/CodyKolby/inspo-swipe/contents/data/videos.json?ref=main` → decode `content` (base64), keep `sha`.
-2. Append your new entries.
-3. `PUT` the same URL with `{"message": "grok: +N videos", "content": "<base64 JSON>", "sha": "<sha>", "branch": "main"}` and header `Authorization: Bearer <your token>`.
-4. On `409`, re-read and retry.
+Swipe semantics: `superlike` ("I'd make this") > `like` > `dislike`. `reasons` ∈ `Hook, Format, Topic, Editing, Sound, Humor, Fits my music, Easy to film, Seen it before` (on a dislike = "this part was the problem"). `note` is a direct instruction from Dominik.
 
-## 2. Read feedback → `data/swipes.json`
+## Access (RLS is on for every table)
 
-Read-only for you. Public URL: `https://raw.githubusercontent.com/CodyKolby/inspo-swipe/main/data/swipes.json` (can be cached ~5 min; the contents API is always fresh).
+- **Publishable key** (in `index.html`, public by design): `anon` can `SELECT videos`, `SELECT/INSERT/UPDATE/DELETE swipes` (delete = undo), `INSERT swipe_events`. Nothing else.
+- **Pipeline (box only)**: secret-gated RPCs `public.pipeline_upsert(p_secret, p_table, p_rows jsonb)` (upserts only the keys present; tables `videos, creators, swipes, searches, taste_notes, swipe_events`) and `public.pipeline_select(p_secret, p_table, p_limit)`. The secret is in `/workspace/inspo/.supabase.env` (chmod 600, never commit it). Python helper: `/workspace/inspo/pipeline/sb.py` (`sb.select`, `sb.upsert`, `sb.private_select`).
+- Ad-hoc SQL / schema changes: Supabase connector (`execute_sql`, `apply_migration`) on project `nzefxnfkzybyhillndhz`.
 
-```json
-{
-  "video_id": "tiktok_7312345678901234567",
-  "url": "https://www.tiktok.com/@creator/video/7312345678901234567",
-  "decision": "superlike",
-  "reasons": ["Hook", "Fits my music"],
-  "note": "love the pacing",
-  "swiped_at": "2026-11-25T21:14:03Z"
-}
+## Gemini descriptions
+
+`/workspace/inspo/pipeline/describe.py` — for given video ids: fresh no-watermark URL via ScrapeCreators `/v2/tiktok/video` (1 credit; also stores transcript + duration) → download → trim to the first 60 s → Gemini Files API → `gemini-3.1-flash-lite` with `describe_prompt.md` + JSON schema → saves `videos.description / description_model / description_cost_usd / described_at` → deletes the Gemini upload and the local file.
+
+```
+cd /workspace/inspo/pipeline
+../venv/bin/python describe.py --mode batch --undescribed          # default for real runs (50% cheaper, async)
+../venv/bin/python describe.py --mode direct tiktok_123 tiktok_456  # small tests
+../venv/bin/python describe.py --collect                            # pick up finished batch jobs
 ```
 
-- `decision`: `superlike` (strongest signal, "I'd make this") > `like` > `dislike`.
-- `reasons`: what drove the decision. Possible values: `Hook`, `Format`, `Topic`, `Editing`, `Sound`, `Humor`, `Fits my music`, `Easy to film`, `Seen it before`. On a dislike they mean "this part was the problem".
-- `note`: free text from Dominik; treat it as a direct instruction.
-- A swipe can disappear (he undid it) or change (he edited reasons later). Always re-read the whole file.
+Caps: per-video `max_output_tokens`, any video costing > $0.02 is flagged; `--usd-cap` per run (default $1).
 
 ## Each run
 
-1. Read `swipes.json`, join with `videos.json` by `id`, update your taste notes.
-2. Search ScrapeCreators with that taste. ~80% close to what he likes, ~20% `explore: true`.
-3. Append 10–20 new videos.
+1. Read `swipes` (+ `swipe_events` for history), join with `videos` (incl. `description`), update `taste_notes`.
+2. Search ScrapeCreators with that taste (~80% close, ~20% `explore`); log each call in `searches`.
+3. Upsert 10–20 new `videos` (+ `creators`), then describe them with the batch pipeline.
