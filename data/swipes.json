@@ -584,8 +584,11 @@
     "video_id": "tiktok_7673521386438036750",
     "url": "https://www.tiktok.com/@thatfangirlerin/video/7673521386438036750",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:48:59.761Z"
+    "reasons": [
+      "Topic"
+    ],
+    "note": "I don't have idea how I could use it to promote my music",
+    "swiped_at": "2026-11-26T18:48:59.761Z",
+    "updated_at": "2026-11-26T18:49:12.849Z"
   }
 ]
