@@ -301,8 +301,11 @@
     "video_id": "tiktok_7703679939429567757",
     "url": "https://www.tiktok.com/@truelegacystudios/video/7703679939429567757",
     "decision": "superlike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T17:24:08.533Z"
+    "reasons": [
+      "Hook"
+    ],
+    "note": "Really great one, I can do it with few of my friends whenever I want to, it's easy to record and engaging",
+    "swiped_at": "2026-11-26T17:24:08.533Z",
+    "updated_at": "2026-11-26T17:24:22.137Z"
   }
 ]
