@@ -330,8 +330,12 @@
     "video_id": "tiktok_7662970407661653279",
     "url": "https://www.tiktok.com/@sqweezz_/video/7662970407661653279",
     "decision": "superlike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T17:25:33.059Z"
+    "reasons": [
+      "Format",
+      "Hook"
+    ],
+    "note": "It's really good, engaging funny and really good hook and format",
+    "swiped_at": "2026-11-26T17:25:33.059Z",
+    "updated_at": "2026-11-26T17:25:46.373Z"
   }
 ]
