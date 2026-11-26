@@ -463,8 +463,13 @@
     "video_id": "tiktok_7710512101999136030",
     "url": "https://www.tiktok.com/@jonworld5/video/7710512101999136030",
     "decision": "superlike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:37:43.782Z"
+    "reasons": [
+      "Format",
+      "Hook",
+      "Humor"
+    ],
+    "note": "It has super big potential for viral, really cool idea, I can just play some funny songs before playing my own at the end",
+    "swiped_at": "2026-11-26T18:37:43.782Z",
+    "updated_at": "2026-11-26T18:38:07.216Z"
   }
 ]
