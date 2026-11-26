@@ -637,8 +637,11 @@
     "video_id": "tiktok_7667650610258283798",
     "url": "https://www.tiktok.com/@aaronsingssongs/video/7667650610258283798",
     "decision": "dislike",
-    "reasons": [],
-    "note": "",
-    "swiped_at": "2026-11-26T18:51:37.166Z"
+    "reasons": [
+      "Format"
+    ],
+    "note": "It went viral because he was singing about being locked up and in the video the police was hand cuffing someone, while he was recording whole situation",
+    "swiped_at": "2026-11-26T18:51:37.166Z",
+    "updated_at": "2026-11-26T18:52:05.336Z"
   }
 ]
