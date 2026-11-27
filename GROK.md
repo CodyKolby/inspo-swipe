@@ -84,3 +84,10 @@ Saved lists (Super / Liked / Disliked) and the Hooks lists show a cover on the l
 Covers are durable files in `thumbs/<video id>.jpg` (240 px JPEG, ~15 KB), served by GitHub Pages — no expiring CDN links, no ScrapeCreators credits.
 They are made by `/workspace/inspo/pipeline/thumbs.py` (headless TikTok player page → cover image → ffmpeg resize); it skips ids that already have a file.
 After adding new videos: run `../venv/bin/python thumbs.py` in the pipeline folder, then commit `thumbs/`. Missing file → 🎬 placeholder + ▶ (still links to the video).
+
+## Hook scout pipeline (box: `/workspace/inspo/pipeline/hookscout/`)
+Run by Hook Critic. Finds TikToks where the on-screen text hook carries the video (footage = filler) and the hook promotes the creator's own music.
+1. `search.py`: ScrapeCreators keyword search (`queries.txt`, 1 credit/call, cached in `pipeline/state/sc_cache`) + latest posts of `creators.txt`. Dedupes against `videos` + `hooks`, metadata prefilter (views ≥ `HOOK_MIN_VIEWS`, default 200k; music words; no lyric/cover edits) → `state/candidates.json`.
+2. `describe_hooks.py`: downloads the mp4 from the search result's own media link (free; 1-credit `/v2/tiktok/video` only as a capped fallback), cuts it to the **first 15 s**, Gemini `gemini-3.1-flash-lite` batch (`hook_prompt.md`, capped schema; $0.02/video, $1.50/run caps) → `state/results/<id>.json`.
+3. Review by hand into `state/review.json` (`review_list.py` prints a compact list): drop non-promo / US-only / begging / cover / song-is-the-joke / duplicates; score with the Hook Critic rubric + Polish adaptation.
+4. `write_hooks.py`: upserts `hooks` (status stays `found`), saves the hook frame (360 px) to `thumbs/<hook id>.jpg` and sets `frame_url` to its GitHub Pages URL, adds a `critic_notes` NOTE row (scores + Polish idea as `rewrite`). Then commit `thumbs/` and run `pipeline/export_hook_library.py`.
