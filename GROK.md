@@ -78,3 +78,9 @@ Reason chips (hooks): `Hook text, Funny, Relatable, Fits my music, Easy to adapt
 - **Publishers** → `edits?status=eq.approved`: `routed_to.tiktok = edits_chef` → Edits Chef; `routed_to.instagram = trial_reels_agnt` → Trial reels AGNT (trial reel). Each fills `edits.posted.<platform>` and, when all targets are done, sets the hook to `posted`.
 - **Hook Critic** → see `HOOK_CRITIC.md` (views `hook_library`, `hook_scout_library`; JSON snapshot via `pipeline/export_hook_library.py` → `trial-reels/research/viral-library.json`; verdicts into `critic_notes`).
 - No video files in Supabase (free plan storage is 1 GB). Clips and renders live in R2 (or Drive); only URLs go in the tables.
+
+## Thumbnails (saved lists)
+Saved lists (Super / Liked / Disliked) and the Hooks lists show a cover on the left with a ▶ overlay that opens the TikTok in a new tab.
+Covers are durable files in `thumbs/<video id>.jpg` (240 px JPEG, ~15 KB), served by GitHub Pages — no expiring CDN links, no ScrapeCreators credits.
+They are made by `/workspace/inspo/pipeline/thumbs.py` (headless TikTok player page → cover image → ffmpeg resize); it skips ids that already have a file.
+After adding new videos: run `../venv/bin/python thumbs.py` in the pipeline folder, then commit `thumbs/`. Missing file → 🎬 placeholder + ▶ (still links to the video).
