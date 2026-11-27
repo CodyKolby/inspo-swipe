@@ -150,13 +150,6 @@
   .sub { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .hseg { margin: 0 0 8px; }
   .hseg button .n { color: var(--accent); font-weight: 700; }
-  .hookart { position: absolute; inset: 0; display: grid; place-items: center; padding: 22px; text-align: center;
-    background: linear-gradient(160deg, #2a1640, #10202e); overflow: hidden; }
-  .hookart img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .5; }
-  .hookart .htxt { position: relative; font-size: 24px; line-height: 1.25; font-weight: 800; color: #fff;
-    text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 3px 10px rgba(0,0,0,.6); overflow-wrap: anywhere; }
-  .hookart .htxt.unknown { font-size: 17px; color: var(--muted); text-shadow: none; font-weight: 600; }
-  .hookart .play { position: absolute; bottom: 12px; right: 12px; }
   .trans { margin: 6px 0; padding: 8px 10px; border-left: 3px solid var(--super); background: var(--panel2); border-radius: 8px; font-size: 14px; }
   .trans .lbl, .critic .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); display: block; }
   .critic { margin-top: 8px; padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--line); font-size: 13px; }
@@ -869,17 +862,32 @@
   $('#hReloadBtn').onclick = () => load();
 
   // ---------- swipe deck ----------
+  // Same embed the Inspo deck uses (see embedUrl there). hooks.url is a canonical
+  // TikTok link; if it isn't, hooks.id is platform_nativeId (tiktok_<digits>).
+  function embedUrl(h) {
+    const u = String(h.url || ''); let m;
+    if ((m = u.match(/tiktok\.com\/.*\/video\/(\d+)/))) return `https://www.tiktok.com/player/v1/${m[1]}?music_info=1&description=1&rel=0`;
+    if ((m = String(h.id || '').match(/^tiktok_(\d+)$/))) return `https://www.tiktok.com/player/v1/${m[1]}?music_info=1&description=1&rel=0`;
+    if ((m = u.match(/instagram\.com\/(?:reel|reels|p)\/([\w-]+)/))) return `https://www.instagram.com/reel/${m[1]}/embed/`;
+    if ((m = u.match(/youtube\.com\/shorts\/([\w-]+)/) || u.match(/[?&]v=([\w-]+)/) || u.match(/youtu\.be\/([\w-]+)/))) return `https://www.youtube.com/embed/${m[1]}?playsinline=1&rel=0`;
+    return '';
+  }
   const critHtml = (k) => (notes[k] || []).slice(0, 2).map((c) => `<div class="critic"><span class="lbl">Hook Critic</span>${c.verdict ? `<b class="${esc(c.verdict)}">${esc(c.verdict)}</b> ` : ''}${c.scores && c.scores.avg != null ? `(${esc(c.scores.avg)}/10) ` : ''}${esc(c.note)}${c.rewrite ? `<div style="margin-top:4px">→ <i>${esc(c.rewrite)}</i></div>` : ''}</div>`).join('');
   function cardHtml(h, live) {
     const s = h.stats || {}; const url = safeUrl(h.url);
     const stat = (icon, val) => (num(val) ? `<span>${icon} <b>${num(val)}</b></span>` : '');
     const translated = h.hook_text_en && h.hook_text && h.hook_text_en.trim().toLowerCase() !== h.hook_text.trim().toLowerCase();
-    const vid = (String(h.url || '').match(/tiktok\.com\/.*\/video\/(\d+)/) || [])[1];
+    const plat = h.platform === 'instagram' ? 'Instagram' : h.platform === 'youtube' ? 'YouTube' : 'TikTok';
+    const emb = live ? embedUrl(h) : '';
+    const media = emb
+      ? `<iframe src="${esc(emb)}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>`
+      : `<div class="fallback">${safeUrl(h.frame_url) ? `<img src="${esc(h.frame_url)}" alt="">` : ''}<div class="inner">
+           <div class="big">🎬</div>
+           ${url ? `<a class="pill-link" href="${esc(url)}" target="_blank" rel="noopener">Watch on ${esc(plat)} ↗</a>` : ''}
+         </div></div>`;
     return `
       <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div><div class="stamp super">SUPER</div>
-      <div class="media"><div class="hookart">${safeUrl(h.frame_url) ? `<img src="${esc(h.frame_url)}" alt="">` : ''}
-        <div class="htxt ${h.hook_text ? '' : 'unknown'}">${h.hook_text ? esc(h.hook_text) : 'Hook text not read yet'}</div>
-        ${live && vid ? `<button class="btn play" data-play="${esc(vid)}">▶ Play</button>` : ''}</div></div>
+      <div class="media">${media}</div>
       <div class="info">
         <div class="meta">
           <span class="badge">${esc(h.platform === 'instagram' ? 'Instagram' : h.platform === 'youtube' ? 'YouTube' : 'TikTok')}</span>
@@ -889,6 +897,7 @@
           ${h.posted_at ? `<span>· ${esc(ago(h.posted_at))}</span>` : ''}
           ${url ? `<a class="open" href="${esc(url)}" target="_blank" rel="noopener">Open on TikTok ↗</a>` : ''}
         </div>
+        ${h.hook_text ? `<div class="hook">${esc(h.hook_text)}</div>` : '<div class="why">Hook text not read yet</div>'}
         <div class="stats">${stat('▶', s.views)}${stat('♥', s.likes)}${stat('💬', s.comments)}${stat('↗', s.shares)}${stat('🔖', s.saves)}</div>
         ${translated ? `<div class="trans"><span class="lbl">English${h.hook_language ? ' · from ' + esc(LANG[h.hook_language] || h.hook_language) : ''}</span>${esc(h.hook_text_en)}</div>` : ''}
         <div class="tags">${h.hook_pattern ? `<span class="tag">${esc(h.hook_pattern)}</span>` : ''}${h.hook_template ? `<span class="tag">“${esc(h.hook_template)}”</span>` : ''}</div>
@@ -916,8 +925,6 @@
     if (next) { const b = document.createElement('div'); b.className = 'card behind'; b.innerHTML = cardHtml(next, false); stage.appendChild(b); }
     const c = document.createElement('div'); c.className = 'card'; c.id = 'hCard'; c.innerHTML = cardHtml(top, true); stage.appendChild(c);
     attachDrag(c);
-    const pb = c.querySelector('[data-play]');
-    if (pb) pb.onclick = () => { c.querySelector('.media').innerHTML = `<iframe src="https://www.tiktok.com/player/v1/${esc(pb.dataset.play)}?music_info=1&description=1&rel=0&autoplay=1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`; };
     const cap = c.querySelector('.caption');
     if (cap && cap.scrollHeight > cap.clientHeight + 1) { cap.classList.add('collapsible'); cap.onclick = () => cap.classList.toggle('expanded'); }
     paintStatus();
@@ -993,9 +1000,16 @@
   });
 
   // ---------- ready to edit ----------
+  // Same cover as the Inspo saved lists (defined in that script, not in this one).
+  const thumbId = (id, url) => { if (/^tiktok_\d+$/.test(id || '')) return id; const m = String(url || '').match(/tiktok\.com\/.*video\/(\d+)/); return m ? 'tiktok_' + m[1] : ''; };
+  function thumbHtml(id, url) {
+    const tid = thumbId(id, url); const u = safeUrl(url);
+    const inner = `<span class="ph">🎬</span>${tid ? `<img src="thumbs/${esc(tid)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="play">▶</span>`;
+    return u ? `<a class="thumb" href="${esc(u)}" target="_blank" rel="noopener" title="Open video">${inner}</a>` : `<div class="thumb">${inner}</div>`;
+  }
   function itemHtml(h, withBox) {
     const sw = swipeOf(h.id) || {}; const url = safeUrl(h.url);
-    return `<div class="litem">${withBox ? `<input type="checkbox" data-id="${esc(h.id)}" ${selected.has(h.id) ? 'checked' : ''}>` : ''}${thumbHtml(h.video_id, h.url)}
+    return `<div class="litem">${withBox ? `<input type="checkbox" data-id="${esc(h.id)}" ${selected.has(h.id) ? 'checked' : ''}>` : ''}${thumbHtml(h.id, h.url)}
       <div class="body"><div class="top">${sw.decision === 'superlike' ? '<span>★</span>' : sw.decision ? '<span>♥</span>' : ''}${h.creator ? `<b>@${esc(String(h.creator).replace(/^@/, ''))}</b>` : ''}${num((h.stats || {}).views) ? `<span>▶ ${num(h.stats.views)}</span>` : ''}
         ${!withBox ? `<span class="pillst">${esc(h.status)}</span>` : ''}${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>` : ''}</div>
         <div class="htext">${esc(h.hook_text || '(hook text not read yet)')}</div>
